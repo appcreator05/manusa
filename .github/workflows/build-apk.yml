@@ -1,0 +1,125 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build VDOSKy Release APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build web application
+        run: npm run build
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: 21
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: ''
+
+      - name: Accept Android SDK licenses
+        run: yes | sdkmanager --licenses || true
+
+      - name: Configure Start.io SDK & Sync Capacitor Android
+        run: |
+          if [ ! -d "android" ]; then
+            npx cap add android
+          fi
+
+          # Ensure Android permissions for Start.io advertising ID, network, audio, and wake lock
+          MANIFEST="android/app/src/main/AndroidManifest.xml"
+          if [ -f "$MANIFEST" ]; then
+            if ! grep -q "com.startapp.sdk.APPLICATION_ID" "$MANIFEST"; then
+              sed -i 's/<application/<application android:hardwareAccelerated="true" android:usesCleartextTraffic="true"/g' "$MANIFEST"
+              sed -i '/<application[^>]*>/a \        <!-- Start.io Official Ad Network Credentials -->\n        <meta-data android:name="com.startapp.sdk.APPLICATION_ID" android:value="203877183" \/>\n        <meta-data android:name="com.startapp.sdk.RETURN_ADS_ENABLED" android:value="false" \/>' "$MANIFEST"
+            fi
+            if ! grep -q "com.google.android.gms.permission.AD_ID" "$MANIFEST"; then
+              sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.INTERNET" />\n    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />\n    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />\n    <uses-permission android:name="com.google.android.gms.permission.AD_ID" />\n    <uses-permission android:name="android.permission.RECORD_AUDIO" />\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />\n    <uses-permission android:name="android.permission.WAKE_LOCK" />' "$MANIFEST"
+            fi
+          fi
+
+          # Ensure Start.io In-App SDK dependency in build.gradle
+          BUILD_GRADLE="android/app/build.gradle"
+          if [ -f "$BUILD_GRADLE" ]; then
+            if ! grep -q "com.startapp:inapp-sdk" "$BUILD_GRADLE"; then
+              sed -i '/dependencies {/a \    implementation "com.startapp:inapp-sdk:5.1.0"' "$BUILD_GRADLE"
+            fi
+          fi
+
+          npx cap sync android
+
+      - name: Setup Release Keystore
+        run: |
+          mkdir -p android/app
+          if [ ! -f "android/app/release.keystore" ]; then
+            echo "Generating production release signing keystore..."
+            keytool -genkeypair -v \
+              -keystore android/app/release.keystore \
+              -alias vdosky \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000 \
+              -storepass vdosky123 \
+              -keypass vdosky123 \
+              -dname "CN=VDOSKy, OU=Entertainment, O=VDOSKy Streaming, L=Kolkata, ST=West Bengal, C=IN"
+          fi
+
+      - name: Build Android Release APK
+        working-directory: android
+        env:
+          KEYSTORE_PASSWORD: "vdosky123"
+          KEY_ALIAS: "vdosky"
+          KEY_PASSWORD: "vdosky123"
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --stacktrace
+
+      - name: Upload Release APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: VDOSKy-Release-APK
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+      - name: Prepare Release APK
+        run: |
+          RELEASE_APK=$(find android/app/build/outputs/apk/release -name "*release*.apk" | head -n 1)
+          if [ -n "$RELEASE_APK" ]; then
+            echo "Found Release APK: $RELEASE_APK"
+            cp "$RELEASE_APK" VDOSKy.apk
+          else
+            echo "Error: Release APK not found"
+            find android/app/build/outputs -type f || true
+            exit 1
+          fi
+
+      - name: Publish to GitHub Releases
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: VDOSKy App Official Release v1.0.${{ github.run_number }}
+          body: "Official Release APK for VDOSKy Android App with Start.io Ads, Voice Search, Fullscreen Landscape, Screen Wake Lock, and 3000+ Movies Streaming."
+          files: VDOSKy.apk
