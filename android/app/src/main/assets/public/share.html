@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Share VDOSky App - Free Movies, Music & QR Scanner</title>
+    <meta name="description" content="Share VDOSky App with your friends and family directly to WhatsApp, Facebook, Telegram and more.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg-primary: #090a0f;
+            --bg-card: #12151f;
+            --bg-card-hover: #181d2c;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --accent-cyan: #00d2ff;
+            --accent-blue: #3a7bd5;
+            --accent-red: #ff3b30;
+            --accent-green: #25D366;
+            --text-main: #f0f6fc;
+            --text-muted: #8b949e;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            padding-bottom: 70px;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* Top Header */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            height: 60px;
+            background: rgba(14, 16, 24, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-main);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 8px 14px;
+            border-radius: 9999px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover, .nav-btn:active {
+            background: rgba(0, 210, 255, 0.15);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 16px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Hero App Card */
+        .hero-card {
+            background: linear-gradient(145deg, #131724 0%, #0d101a 100%);
+            border: 1px solid rgba(0, 210, 255, 0.2);
+            border-radius: 18px;
+            padding: 22px 18px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+        }
+
+        .hero-card::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 130px;
+            height: 130px;
+            background: radial-gradient(circle, rgba(0, 210, 255, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .hero-card::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            left: -50px;
+            width: 130px;
+            height: 130px;
+            background: radial-gradient(circle, rgba(255, 59, 48, 0.12) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .app-logo-badge {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #ff3b30 0%, #ff8c00 50%, #00d2ff 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 32px;
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(255, 59, 48, 0.35);
+        }
+
+        .hero-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 6px;
+            letter-spacing: -0.2px;
+        }
+
+        .hero-desc {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+
+        .share-url-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 8px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            color: #58a6ff;
+            font-weight: 600;
+            word-break: break-all;
+            margin-bottom: 16px;
+        }
+
+        .share-url-pill i {
+            color: #00d2ff;
+        }
+
+        /* Primary Instant Native Share Button */
+        .btn-instant-share {
+            width: 100%;
+            background: linear-gradient(135deg, #00d2ff 0%, #3a7bd5 100%);
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            padding: 16px 20px;
+            font-size: 16px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 8px 25px rgba(0, 210, 255, 0.35);
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-instant-share:hover, .btn-instant-share:active {
+            transform: scale(0.98);
+            box-shadow: 0 4px 15px rgba(0, 210, 255, 0.5);
+            background: linear-gradient(135deg, #2ae0ff 0%, #4a8ff5 100%);
+        }
+
+        .btn-instant-share i {
+            font-size: 20px;
+        }
+
+        /* Section Title */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 6px;
+            margin-bottom: 2px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #8b949e;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-title i {
+            color: var(--accent-cyan);
+        }
+
+        .section-subtitle {
+            font-size: 12px;
+            color: #58a6ff;
+            font-weight: 600;
+        }
+
+        /* Social Share Grid (1-Tap Direct Links) */
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        @media (min-width: 480px) {
+            .social-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 13px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: #fff;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            font-weight: 600;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .social-btn:hover, .social-btn:active {
+            transform: translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.25);
+            background: var(--bg-card-hover);
+        }
+
+        .social-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+            color: #fff;
+        }
+
+        .social-meta {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            overflow: hidden;
+        }
+
+        .social-name {
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .social-action-label {
+            font-size: 11px;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        /* Specific Brand Colors */
+        .brand-whatsapp .social-icon { background: linear-gradient(135deg, #25D366, #128C7E); box-shadow: 0 4px 12px rgba(37, 211, 102, 0.3); }
+        .brand-whatsapp:hover { border-color: #25D366; }
+
+        .brand-telegram .social-icon { background: linear-gradient(135deg, #0088cc, #00c6ff); box-shadow: 0 4px 12px rgba(0, 136, 204, 0.3); }
+        .brand-telegram:hover { border-color: #0088cc; }
+
+        .brand-facebook .social-icon { background: linear-gradient(135deg, #1877F2, #0d5ec4); box-shadow: 0 4px 12px rgba(24, 119, 242, 0.3); }
+        .brand-facebook:hover { border-color: #1877F2; }
+
+        .brand-messenger .social-icon { background: linear-gradient(135deg, #00B2FF, #006AFF); box-shadow: 0 4px 12px rgba(0, 178, 255, 0.3); }
+        .brand-messenger:hover { border-color: #00B2FF; }
+
+        .brand-twitter .social-icon { background: linear-gradient(135deg, #000, #333); border: 1px solid #444; box-shadow: 0 4px 12px rgba(255, 255, 255, 0.1); }
+        .brand-twitter:hover { border-color: #fff; }
+
+        .brand-sms .social-icon { background: linear-gradient(135deg, #ff9500, #ff5e3a); box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3); }
+        .brand-sms:hover { border-color: #ff9500; }
+
+        .brand-gmail .social-icon { background: linear-gradient(135deg, #EA4335, #B31412); box-shadow: 0 4px 12px rgba(234, 67, 53, 0.3); }
+        .brand-gmail:hover { border-color: #EA4335; }
+
+        .brand-reddit .social-icon { background: linear-gradient(135deg, #FF4500, #CC3700); box-shadow: 0 4px 12px rgba(255, 69, 0, 0.3); }
+        .brand-reddit:hover { border-color: #FF4500; }
+
+        .brand-linkedin .social-icon { background: linear-gradient(135deg, #0A66C2, #004182); box-shadow: 0 4px 12px rgba(10, 102, 194, 0.3); }
+        .brand-linkedin:hover { border-color: #0A66C2; }
+
+        .brand-pinterest .social-icon { background: linear-gradient(135deg, #E60023, #AD081B); box-shadow: 0 4px 12px rgba(230, 0, 35, 0.3); }
+        .brand-pinterest:hover { border-color: #E60023; }
+
+        /* QR Scan to Download Card */
+        .qr-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 20px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .qr-box-wrapper {
+            background: #ffffff;
+            padding: 14px;
+            border-radius: 16px;
+            display: inline-block;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+
+        #shareQrCode img, #shareQrCode canvas {
+            display: block;
+            margin: 0 auto;
+        }
+
+        .qr-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .qr-card-desc {
+            font-size: 13px;
+            color: var(--text-muted);
+            max-width: 320px;
+            line-height: 1.4;
+        }
+
+        /* Direct Copy Fallback Bar */
+        .copy-bar {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .copy-url-text {
+            font-family: monospace;
+            font-size: 13px;
+            color: #00d2ff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .btn-copy-small {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+
+        .btn-copy-small:hover {
+            background: rgba(0, 210, 255, 0.2);
+            border-color: #00d2ff;
+            color: #00d2ff;
+        }
+
+        /* Features Pill Row */
+        .perks-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .perk-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 9999px;
+            padding: 6px 12px;
+            font-size: 12px;
+            color: #c9d1d9;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .perk-pill i {
+            color: #00d2ff;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(18, 21, 31, 0.95);
+            border: 1px solid #00d2ff;
+            color: #fff;
+            padding: 12px 22px;
+            border-radius: 9999px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .toast i {
+            color: #00d2ff;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body id="shareAppPage">
+
+    <!-- Top Navigation Header -->
+    <header class="header" id="shareHeader">
+        <div class="header-left">
+            <a href="index.html" class="nav-btn" id="btnBackHome">
+                <i class="fa-solid fa-house"></i> Home
+            </a>
+            <div class="header-title">
+                <i class="fa-solid fa-share-nodes"></i>
+                <span>Share App</span>
+            </div>
+        </div>
+        <div class="header-right">
+            <a href="music.html" class="nav-btn" style="color: #ff3b30;" id="btnMusicNav">
+                <i class="fa-solid fa-music"></i> Music
+            </a>
+            <a href="qr.html" class="nav-btn" style="color: #00d2ff;" id="btnQrNav">
+                <i class="fa-solid fa-qrcode"></i> Scan
+            </a>
+        </div>
+    </header>
+
+    <div class="container" id="shareContainer">
+
+        <!-- Hero Card with Instant Share -->
+        <div class="hero-card" id="shareHeroCard">
+            <div class="app-logo-badge" id="appLogoBadge">
+                <i class="fa-solid fa-play"></i>
+            </div>
+            <h1 class="hero-title">VDOSky - Watch & Enjoy Free</h1>
+            <p class="hero-desc">
+                Stream Unlimited Movies, Web Series, High Quality Songs & Fast QR Code Scanner on your mobile.
+            </p>
+
+            <div class="share-url-pill" id="shareUrlPill">
+                <i class="fa-solid fa-link"></i>
+                <span>https://vdoskay.blogspot.com</span>
+            </div>
+
+            <!-- Instant One-Click Native System Share Button -->
+            <button class="btn-instant-share" id="btnInstantShareAll" onclick="triggerDirectSystemShare()">
+                <i class="fa-solid fa-share-nodes"></i>
+                <span>Direct Share to Any App</span>
+            </button>
+        </div>
+
+        <!-- Direct Social Media & Messaging Apps -->
+        <div class="section-header">
+            <div class="section-title">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span>Direct 1-Tap Share</span>
+            </div>
+            <span class="section-subtitle">No copy needed • Direct launch</span>
+        </div>
+
+        <div class="social-grid" id="socialAppsGrid">
+            <!-- WhatsApp -->
+            <a href="#" class="social-btn brand-whatsapp" id="btnShareWhatsapp" onclick="shareDirect('whatsapp'); return false;">
+                <div class="social-icon"><i class="fa-brands fa-whatsapp"></i></div>
+                <div class="social-meta">
+                    <span class="social-name">WhatsApp</span>
+                    <span class="social-action-label">Chat & Status</span>
+                </div>
+            </a>
+
+            <!-- Telegram -->
+            <a href="#" class="social-btn brand-telegram" id="btnShareTelegram" onclick="shareDirect('telegram'); return false;">
+                <div class="social-icon"><i class="fa-brands fa-telegram"></i></div>
+                <div class="social-meta">
+                    <span class="social-name">Telegram</span>
+                    <span class="social-action-label">Channels & Friends</span>
+                </div>
+            </a>
+
+            <!-- Facebook -->
+            <a href="#" class="social-btn brand-facebook" id="btnShareFacebook" onclick="shareDirect('facebook'); return false;">
+                <div class="social-icon"><i class="fa-brands fa-facebook-f"></i></div>
+                <div class="social-meta">
+                    <span class="social-name">Facebook</span>
+                    <span class="social-action-label">Feed & Story</span>
+                </div>
+            </a>
+
+            <!-- Messenger -->
+            <a href="#" class="social-btn brand-messenger" id="btnShareMessenger" onclick="shareDirect('messenger'); return false;">
+                <div class="social-icon"><i class="fa-brands fa-facebook-messenger"></i></div>
+                <div class="social-meta">
+                    <span class="social-name">Messenger</span>
+                    <span class="social-action-label">Direct Message</span>
+                </div>
+            </a>
+
+            <!-- X / Twitter -->
+            <a href="#" class="social-btn brand-twitter" id="btnShareTwitter" onclick="shareDirect('twitter'); return false;">
+                <div class="social-icon"><i class="fa-brands fa-x-twitter"></i></div>
+                <div class="social-meta">
+                    <span class="social-name">X (Twitter)</span>
+                    <span class="social-action-label">Post Tweet</span>
+                </div>
+            </a>
+
+            <!-- SMS Message -->
+            <a href="#" class="social-btn brand-sms" id="btnShareSms" onclick="shareDirect('sms'); return false;">
+                <div class="social-icon"><i class="fa-solid fa-comment-sms"></i></div>
+                <div class="social-meta">
+                    <span class="social-name">SMS Message</span>
+                    <span class="social-action-label">Mobile Text</span>
+                </div>
+            </a>
+
+            <!-- Email / Gmail -->
+            <a href="#" class="social-btn brand-gmail" id="btnShareEmail" onclick="shareDirect('email'); return false;">
+                <div class="social-icon"><i class="fa-solid fa-envelope"></i></div>
+                <div class="social-meta">
+                    <span class="social-name">Email / Gmail</span>
+                    <span class="social-action-label">Send Mail</span>
+                </div>
+            </a>
+
+            <!-- Reddit -->
+            <a href="#" class="social-btn brand-reddit" id="btnShareReddit" onclick="shareDirect('reddit'); return false;">
+                <div class="social-icon"><i class="fa-brands fa-reddit-alien"></i></div>
+                <div class="social-meta">
+                    <span class="social-name">Reddit</span>
+                    <span class="social-action-label">Share Post</span>
+                </div>
+            </a>
+
+            <!-- LinkedIn -->
+            <a href="#" class="social-btn brand-linkedin" id="btnShareLinkedin" onclick="shareDirect('linkedin'); return false;">
+                <div class="social-icon"><i class="fa-brands fa-linkedin-in"></i></div>
+                <div class="social-meta">
+                    <span class="social-name">LinkedIn</span>
+                    <span class="social-action-label">Feed Post</span>
+                </div>
+            </a>
+
+            <!-- Pinterest -->
+            <a href="#" class="social-btn brand-pinterest" id="btnSharePinterest" onclick="shareDirect('pinterest'); return false;">
+                <div class="social-icon"><i class="fa-brands fa-pinterest-p"></i></div>
+                <div class="social-meta">
+                    <span class="social-name">Pinterest</span>
+                    <span class="social-action-label">Pin Board</span>
+                </div>
+            </a>
+        </div>
+
+        <!-- Scan to Download Directly (Screen to Screen QR) -->
+        <div class="qr-card" id="shareQrCard">
+            <h2 class="qr-card-title"><i class="fa-solid fa-qrcode" style="color: #00d2ff; margin-right: 6px;"></i> Scan with Camera to Download</h2>
+            <div class="qr-box-wrapper">
+                <div id="shareQrCode"></div>
+            </div>
+            <p class="qr-card-desc">
+                If your friend is next to you, they can simply point their phone camera or our QR Scanner at this code to open and download VDOSky!
+            </p>
+        </div>
+
+        <!-- Secondary Copy Link Box -->
+        <div class="copy-bar" id="shareCopyBar">
+            <span class="copy-url-text" id="shareUrlDisplay">https://vdoskay.blogspot.com</span>
+            <button class="btn-copy-small" id="btnCopyLinkFallback" onclick="copyLinkFallback()">
+                <i class="fa-regular fa-copy"></i> Copy
+            </button>
+        </div>
+
+        <!-- Perks Row -->
+        <div class="perks-row">
+            <div class="perk-pill"><i class="fa-solid fa-check"></i> 100% Free App</div>
+            <div class="perk-pill"><i class="fa-solid fa-bolt"></i> Fast HD Stream</div>
+            <div class="perk-pill"><i class="fa-solid fa-music"></i> Online Music</div>
+            <div class="perk-pill"><i class="fa-solid fa-shield-halved"></i> Safe & Secure</div>
+        </div>
+    </div>
+
+    <!-- Toast Notification Element -->
+    <div id="toastNotification" class="toast">
+        <i class="fa-solid fa-circle-check"></i>
+        <span id="toastMessage">Link copied successfully!</span>
+    </div>
+
+    <script>
+        // Target Link & Captions
+        const SHARE_URL = "https://vdoskay.blogspot.com";
+        const SHARE_TITLE = "VDOSky App - Free Movies, Music & QR Scanner";
+        const SHARE_MESSAGE = "Download VDOSky App to watch free HD Movies, listen to trending Music & scan QR codes fast! Download now:";
+        const FULL_SHARE_TEXT = SHARE_MESSAGE + " " + SHARE_URL;
+
+        // Generate QR Code on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const qrContainer = document.getElementById('shareQrCode');
+                if (qrContainer && typeof QRCode !== 'undefined') {
+                    new QRCode(qrContainer, {
+                        text: SHARE_URL,
+                        width: 170,
+                        height: 170,
+                        colorDark: "#090a0f",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                }
+            } catch (err) {
+                console.error("QR Code generation error:", err);
+            }
+        });
+
+        // 1. Direct System Share (Opens Android's / Device's native share tray for ALL apps)
+        function triggerDirectSystemShare() {
+            // Check if running inside Android APK native interface
+            if (window.Android && typeof window.Android.shareApp === 'function') {
+                window.Android.shareApp(SHARE_MESSAGE, SHARE_URL);
+                showToast("Opening Android share...");
+                return;
+            }
+
+            // Standard Web Share API (Supported on Chrome Mobile, Android WebView, Safari iOS)
+            if (navigator.share) {
+                navigator.share({
+                    title: SHARE_TITLE,
+                    text: SHARE_MESSAGE,
+                    url: SHARE_URL
+                }).then(() => {
+                    showToast("Shared successfully!");
+                }).catch((error) => {
+                    // If user cancelled, don't show error; if failed, offer fallback
+                    if (error.name !== 'AbortError') {
+                        shareDirect('whatsapp');
+                    }
+                });
+            } else {
+                // Desktop or unsupported browser fallback: open WhatsApp directly
+                shareDirect('whatsapp');
+            }
+        }
+
+        // 2. Direct 1-Tap Social App Sharing Functions
+        function shareDirect(platform) {
+            const encodedUrl = encodeURIComponent(SHARE_URL);
+            const encodedText = encodeURIComponent(SHARE_MESSAGE + " " + SHARE_URL);
+            const encodedTitle = encodeURIComponent(SHARE_TITLE);
+
+            let targetUrl = "";
+
+            switch (platform) {
+                case 'whatsapp':
+                    // Directly launches WhatsApp with prefilled message
+                    targetUrl = "https://api.whatsapp.com/send?text=" + encodedText;
+                    break;
+
+                case 'telegram':
+                    // Directly launches Telegram share
+                    targetUrl = "https://t.me/share/url?url=" + encodedUrl + "&text=" + encodeURIComponent(SHARE_MESSAGE);
+                    break;
+
+                case 'facebook':
+                    // Directly launches Facebook sharer dialog
+                    targetUrl = "https://www.facebook.com/sharer/sharer.php?u=" + encodedUrl;
+                    break;
+
+                case 'messenger':
+                    // Try direct messenger protocol, fall back to dialog
+                    targetUrl = "fb-messenger://share?link=" + encodedUrl;
+                    // On web fallback:
+                    setTimeout(() => {
+                        window.open("https://www.facebook.com/dialog/send?link=" + encodedUrl + "&app_id=291494419107518&redirect_uri=" + encodedUrl, "_blank");
+                    }, 400);
+                    break;
+
+                case 'twitter':
+                    // Directly launches Twitter / X tweet compose
+                    targetUrl = "https://twitter.com/intent/tweet?url=" + encodedUrl + "&text=" + encodeURIComponent(SHARE_MESSAGE);
+                    break;
+
+                case 'sms':
+                    // Directly opens default SMS text messaging app
+                    targetUrl = "sms:?body=" + encodedText;
+                    break;
+
+                case 'email':
+                    // Directly opens default Email / Gmail client
+                    targetUrl = "mailto:?subject=" + encodedTitle + "&body=" + encodeURIComponent("Hi,\n\n" + SHARE_MESSAGE + "\n" + SHARE_URL + "\n\nEnjoy unlimited entertainment!");
+                    break;
+
+                case 'reddit':
+                    targetUrl = "https://www.reddit.com/submit?url=" + encodedUrl + "&title=" + encodedTitle;
+                    break;
+
+                case 'linkedin':
+                    targetUrl = "https://www.linkedin.com/sharing/share-offsite/?url=" + encodedUrl;
+                    break;
+
+                case 'pinterest':
+                    targetUrl = "https://pinterest.com/pin/create/button/?url=" + encodedUrl + "&description=" + encodedText;
+                    break;
+
+                default:
+                    triggerDirectSystemShare();
+                    return;
+            }
+
+            if (targetUrl) {
+                window.open(targetUrl, "_blank");
+                showToast("Opening " + platform.charAt(0).toUpperCase() + platform.slice(1) + "...");
+            }
+        }
+
+        // Secondary Copy Fallback
+        function copyLinkFallback() {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(SHARE_URL).then(() => {
+                    showToast("Link copied to clipboard!");
+                }).catch(() => {
+                    legacyCopyText(SHARE_URL);
+                });
+            } else {
+                legacyCopyText(SHARE_URL);
+            }
+        }
+
+        function legacyCopyText(text) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            textarea.style.position = "fixed";
+            textarea.style.opacity = "0";
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast("Link copied to clipboard!");
+            } catch (err) {
+                showToast("Link: " + text);
+            }
+            document.body.removeChild(textarea);
+        }
+
+        // Toast Helper
+        let toastTimeout = null;
+        function showToast(msg) {
+            const toast = document.getElementById("toastNotification");
+            const text = document.getElementById("toastMessage");
+            if (!toast || !text) return;
+
+            text.textContent = msg;
+            toast.classList.add("show");
+
+            if (toastTimeout) clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove("show");
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+[
+	{
+		"pkg": "@boengli/capacitor-fullscreen",
+		"classpath": "com.boengli.plugins.fullscreen.Fullscreen"
+	},
+	{
+		"pkg": "@capacitor/app",
+		"classpath": "com.capacitorjs.plugins.app.AppPlugin"
+	},
+	{
+		"pkg": "@capacitor/status-bar",
+		"classpath": "com.capacitorjs.plugins.statusbar.StatusBarPlugin"
+	},
+	{
+		"pkg": "@capawesome/capacitor-navigation-bar",
+		"classpath": "io.capawesome.capacitorjs.plugins.navigationbar.NavigationBarPlugin"
+	}
+]

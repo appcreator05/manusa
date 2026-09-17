@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Online Music - VDOSky.in</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+.post-body a {
+  color: #f9f9f9 !important;
+  text-decoration: none;
+  transition: color .3s;
+}
+      #shorts-container-wrapper {display: none;} #header-wrapper{display: none;}
+      #content-wrapper > .container, #footer-ads-wrap > .container, #footer-fbm .container, #footer-wrapper .container, #header-ads-wrap > .container, #header-wrapper .container, #trending-wrap > .container, .hero-post .flex-center{padding: 0 0px;}
+      .is-single #content-wrapper > .container {
+        display: flex;justify-content: space-between;background: #000;}.item-post h1.entry-title{display: none;}.is-single #content-wrapper {padding: 0px 0 0px;}#footer-wrapper{display: none;}#post-body{margin: 0px 0 0;}
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; }
+        .sidebar {
+    height: 100vh;
+    max-height: 100%;            
+    width: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #111;
+    overflow-x: hidden;
+    transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    padding-top: 60px;
+    z-index: 5000;
+    overflow-y: auto;         
+}
+        .sidebar a { padding: 15px 20px; color: #fff; display: block; text-decoration: none; font-size: 16px; border-bottom: 1px solid #222; }
+        .sidebar a:hover, .sidebar a:active { background: #ff3b30; }
+        .closeSide { position: absolute; top: 14px; right: 20px; background: none; border: none; color: #fff; font-size: 25px; cursor: pointer; }
+        .header { display: flex; align-items: center; padding: 12px; background: #1a1a1a; position: fixed; top: 0; z-index: 999; width: 100%; height: 64px; box-sizing: border-box; }
+        .menuBtn { background: #ff3b30; color: #fff; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; margin-right: 10px; font-weight: bold; display: flex; align-items: center; gap: 6px; }
+        #musicSearch { flex: 1; padding: 10px 14px; border-radius: 8px; border: 1px solid #333; background: #262626; color: #fff; font-size: 15px; outline: none; margin: 0; }
+        #musicList { padding: 12px; margin-bottom: 190px; margin-top: 10px; max-width: 800px; margin-left: auto; margin-right: auto; }
+        .song-item { display: flex; align-items: center; margin-bottom: 12px; background: #1c1c1e; padding: 8px 12px; border-radius: 12px; cursor: pointer; height: 62px; box-sizing: border-box; transition: transform 0.15s, background 0.2s; border: 1px solid transparent; }
+        .song-item:active { transform: scale(0.98); }
+        .song-item.active { border: 1px solid #ff3b30; background: #2a1515 !important; }
+        .song-img { width: 46px; height: 46px; border-radius: 8px; margin-right: 14px; object-fit: cover; flex-shrink: 0; }
+        .song-text-container { flex: 1; min-width: 0; overflow: hidden; }
+        .song-text-container strong { display: block; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .song-text-container small { display: block; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #aaa; margin-top: 2px; }
+        .mini-player { position: fixed; bottom: 52px; left: 0; right: 0; background: #1a1a1a; padding: 12px 16px 14px 16px; display: none; flex-direction: column; border-radius: 20px 20px 0 0; z-index: 7000; box-shadow: 0 -8px 25px rgba(0,0,0,0.95); max-width: 800px; margin: 0 auto; box-sizing: border-box; border-top: 2px solid #ff3b30; pointer-events: auto !important; }
+        .progress-box { display: flex; align-items: center; gap: 10px; font-size: 12px; margin-bottom: 8px; color: #bbb; }
+        .progress-bar { flex: 1; accent-color: #ff3b30; cursor: pointer; height: 5px; margin: 0; }
+        .controls { display: flex; justify-content: center; align-items: center; gap: 32px; font-size: 28px; cursor: pointer; margin-bottom: 8px; }
+        .controls span, .controls button {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            background: none !important;
+            border: none !important;
+            padding: 0;
+            cursor: pointer;
+            outline: none;
+            transition: transform 0.2s;
+        }
+        .controls span:hover, .controls button:hover { transform: scale(1.1); }
+        .controls span:active, .controls button:active { transform: scale(0.95); }
+        .controls span img, .controls button img {
+            border-radius: 50%;
+            display: block;
+            object-fit: cover;
+        }
+        .modal { display: none; position: fixed; z-index: 6000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px); flex-direction: column; align-items: center; justify-content: center; padding-top: calc(68px + env(safe-area-inset-top, 0px)); padding-bottom: calc(215px + env(safe-area-inset-bottom, 0px)); padding-left: 16px; padding-right: 16px; box-sizing: border-box; cursor: pointer; }
+        .modal-content { max-width: 90%; max-height: calc(100vh - 310px); border-radius: 15px; border: 2px solid #ff3b30; object-fit: contain; box-shadow: 0 10px 35px rgba(0,0,0,0.95); cursor: default; transition: transform 0.2s ease; }
+      
+.controls button {
+    background: none !important;
+    border: none !important;
+    padding: 0;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s;
+}
+
+.controls button:hover {
+    transform: scale(1.1);
+}
+
+.controls button img {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+}
+.sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 4999;
+    display: none;
+}
+
+/* ==========================================
+   ADVERTISING STYLES
+   ========================================== */
+.music-ad-slot-top {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 74px auto 8px auto;
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+
+.music-ad-slot-320x50-inner {
+    width: 320px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ad-slot-300x250 {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 18px auto 22px auto;
+    min-height: 265px;
+    position: relative;
+    clear: both;
+}
+
+.ad-slot-300x250-inner {
+    width: 300px;
+    height: 250px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 59, 48, 0.25);
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ad-label {
+    font-size: 10px;
+    color: #8b949e;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+/* Fixed Bottom 320x50 Banner Ad */
+#musicFixedFooterAd {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 52px;
+    background: rgba(14, 14, 22, 0.98);
+    border-top: 1px solid rgba(255, 59, 48, 0.35);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 7001;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.85);
+    pointer-events: auto !important;
+}
+
+#musicFixedFooterAdInner {
+    width: 320px;
+    height: 50px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+}
+
+/* Smartlink Fullscreen Interstitial Ad Modal */
+.interstitial-modal {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    background: #0d1117 !important;
+    z-index: 100000 !important;
+    display: none;
+    flex-direction: column !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+}
+
+.interstitial-header {
+    height: 52px;
+    min-height: 52px;
+    background: #161b22;
+    border-bottom: 1px solid #30363d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px;
+    z-index: 100001;
+}
+
+.interstitial-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.interstitial-badge {
+    background: rgba(255, 59, 48, 0.15);
+    color: #ff3b30;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 9px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 59, 48, 0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.interstitial-timer-text {
+    font-size: 12.5px;
+    color: #c9d1d9;
+    font-weight: 500;
+}
+
+.interstitial-timer-text strong {
+    color: #ff3b30;
+    font-size: 14px;
+}
+
+.interstitial-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.interstitial-chrome-btn {
+    background: #238636;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.interstitial-skip-btn {
+    background: #ff3b30;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.interstitial-skip-btn.disabled {
+    background: #21262d;
+    color: #8b949e;
+    cursor: not-allowed;
+    border: 1px solid #30363d;
+}
+
+.interstitial-body {
+    flex: 1;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background: #0d1117;
+}
+
+.interstitial-body iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    border: none;
+    display: block;
+}
+
+.interstitial-fallback-card {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    text-align: center;
+    background: radial-gradient(circle at 50% 30%, #1f242c 0%, #0d1117 80%);
+    cursor: pointer;
+    z-index: 1;
+}
+
+.interstitial-fallback-icon {
+    font-size: 52px;
+    color: #ff3b30;
+    margin-bottom: 16px;
+}
+
+.interstitial-fallback-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #f0f6fc;
+    margin-bottom: 8px;
+}
+
+.interstitial-fallback-desc {
+    font-size: 14px;
+    color: #8b949e;
+    max-width: 320px;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.interstitial-fallback-btn {
+    background: #ff3b30;
+    color: #fff;
+    border: none;
+    padding: 10px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.interstitial-bottom-bar {
+    height: 42px;
+    min-height: 42px;
+    background: #161b22;
+    border-top: 1px solid #30363d;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    cursor: pointer;
+    color: #ff3b30;
+    font-size: 12.5px;
+    font-weight: 600;
+    z-index: 100001;
+}
+    </style>
+</head>
+<body>
+
+<!-- Image View Modal - leaves bottom player completely visible & interactive -->
+<div id="imageModal" class="modal" onclick="closeModal()">
+    <span onclick="closeModal()" style="position:absolute; top:calc(15px + env(safe-area-inset-top, 0px)); right:18px; font-size:22px; cursor:pointer; z-index:7500; color: #fff; background: rgba(0,0,0,0.7); border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" title="Close Poster">✕</span>
+    <img class="modal-content" id="modalImg" referrerpolicy="no-referrer" onclick="event.stopPropagation()">
+</div>
+
+<div id="sidebarOverlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+<!-- Slide-in Navigation Sidebar -->
+<div id="sidebar" class="sidebar">
+    <button class="closeSide" onclick="toggleSidebar()">✕</button>
+    <a href="index.html"><i class="fa-solid fa-house" style="margin-right: 8px;"></i> 🏠 Home Back</a>
+    <a href="qr.html" style="color: #00d2ff;"><i class="fa-solid fa-qrcode" style="margin-right: 8px;"></i> QR Scanner</a>
+    <a href="share.html" style="color: #25D366;"><i class="fa-solid fa-share-nodes" style="margin-right: 8px;"></i> Share App</a>
+    <a href="javascript:void(0)" onclick="showAllSongs()"><i class="fa-solid fa-music" style="margin-right: 8px;"></i> All Songs</a>
+</div>
+
+<!-- Header with Menu & Search -->
+<div class="header">
+    <button class="menuBtn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i> Menu</button>
+    <input type="text" id="musicSearch" placeholder="Search songs, artists, movies..." onkeyup="filterMusicList()">
+</div>
+
+<!-- Top Advertisement Banner (320x50) -->
+<div class="music-ad-slot-top" id="musicTopAd">
+    <span class="ad-label">Advertisement</span>
+    <div class="music-ad-slot-320x50-inner" id="musicTopAdInner"></div>
+</div>
+
+<!-- Music Songs List -->
+<div id="musicList">
+    <div style="text-align: center; color: #888; padding: 40px 10px;">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 26px; color: #ff3b30; margin-bottom: 12px;"></i>
+        <div>Loading Music Playlist...</div>
+    </div>
+</div>
+
+<!-- Floating Mini Player -->
+<div class="mini-player" id="miniPlayer">
+    <div class="controls">
+        <span onclick="prevSong()" style="cursor: pointer;" title="Previous Song">
+            <img src="preview.png" onerror="this.src='pre.png'; this.onerror=function(){this.src='https://raw.githubusercontent.com/shortsproeran-creator/mt/main/1784459478765_pre.png';}" width="42" height="42" alt="Previous">
+        </span>
+
+        <span id="playPauseBtn" onclick="togglePlay()" style="cursor: pointer;" title="Play/Pause">
+            <img id="playPauseImg" src="play.png" onerror="this.onerror=function(){this.src='https://raw.githubusercontent.com/shortsproeran-creator/mt/main/1784458824699_play.png';}" width="46" height="46" alt="Play">
+        </span>
+
+        <span onclick="nextSong()" style="cursor: pointer;" title="Next Song">
+            <img src="next.png" onerror="this.onerror=function(){this.src='https://raw.githubusercontent.com/shortsproeran-creator/mt/main/1784459478765_pre.png'; this.style.transform='scaleX(-1)';}" width="42" height="42" alt="Next">
+        </span>
+    </div>
+
+    <div class="progress-box">
+        <span id="currentTime">0:00</span>
+        <input type="range" class="progress-bar" id="audioRange" value="0" min="0" max="100">
+        <span id="durationTime">0:00</span>
+    </div>
+
+    <div id="nowPlaying" style="text-align:center; font-weight:bold; font-size: 14px; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #ffffff;">Not Playing</div>
+
+    <audio id="audioPlayer" preload="auto"></audio>
+</div>
+
+<!-- Fixed Footer Banner Ad (320x50) -->
+<div id="musicFixedFooterAd">
+    <div id="musicFixedFooterAdInner"></div>
+</div>
+
+<!-- Smartlink Fullscreen Interstitial Ad Modal -->
+<div id="smartlinkInterstitialModal" class="interstitial-modal">
+    <div class="interstitial-header">
+        <div class="interstitial-header-left">
+            <span class="interstitial-badge"><i class="fa-solid fa-rectangle-ad"></i> Sponsored</span>
+            <div id="interstitialTimerNotice" class="interstitial-timer-text">
+                <i class="fa-solid fa-clock"></i> Skip in <strong id="interstitialCountdown">15</strong>s
+            </div>
+        </div>
+        <div class="interstitial-header-right">
+            <button class="interstitial-chrome-btn" onclick="openSmartlinkInChrome()">
+                <i class="fa-brands fa-chrome"></i> Open in Chrome
+            </button>
+            <button id="interstitialSkipBtn" class="interstitial-skip-btn disabled" disabled onclick="closeSmartlinkInterstitial()">
+                <i class="fa-solid fa-lock"></i> 15s
+            </button>
+        </div>
+    </div>
+
+    <div class="interstitial-body">
+        <div class="interstitial-fallback-card" onclick="openSmartlinkInChrome()">
+            <div class="interstitial-fallback-icon"><i class="fa-solid fa-rectangle-ad"></i></div>
+            <div class="interstitial-fallback-title">Special Sponsored Offer</div>
+            <div class="interstitial-fallback-desc">Explore premium music, deals and content in Google Chrome</div>
+            <button class="interstitial-fallback-btn"><i class="fa-brands fa-chrome"></i> Open Sponsor Offer</button>
+        </div>
+        <iframe id="smartlinkAdIframe" 
+                src="about:blank" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                sandbox="allow-forms allow-modals allow-orientation-lock allow-pointer-lock allow-popups allow-popups-to-escape-sandbox allow-presentation allow-same-origin allow-scripts allow-top-navigation-by-user-activation"
+                scrolling="yes">
+        </iframe>
+    </div>
+
+    <div class="interstitial-bottom-bar" onclick="openSmartlinkInChrome()">
+        <span><i class="fa-brands fa-chrome"></i> Tap here to open in Chrome app</span>
+        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// ADVERTISING ENGINES & SCRIPTS
+// ==========================================
+const SMARTLINK_URL = "https://www.profitableratecpmnetwork.com/yjtnajfd?key=cc49d62c781de224c118e83dc6c2ea8f";
+const INTERSTITIAL_INTERVAL_MS = 15 * 60 * 1000;
+let interstitialCountdownTimer = null;
+let interstitialNextAllowedTime = 0;
+let interstitialActive = false;
+
+window.openInChrome = function(url) {
+    const targetUrl = url || SMARTLINK_URL;
+    if (window.Android && typeof window.Android.openChromeDirectly === 'function') {
+        try { window.Android.openChromeDirectly(targetUrl); return; } catch (e) {}
+    }
+    if (window.Android && typeof window.Android.openExternalUrl === 'function') {
+        try { window.Android.openExternalUrl(targetUrl); return; } catch (e) {}
+    }
+    try {
+        const intentUrl = 'intent://' + targetUrl.replace(/^https?:\/\//, '') + '#Intent;scheme=https;package=com.android.chrome;end';
+        const a = document.createElement('a');
+        a.href = intentUrl;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        return;
+    } catch (e) {}
+    window.open(targetUrl, '_blank');
+};
+
+window.openSmartlinkInChrome = function() {
+    window.openInChrome(SMARTLINK_URL);
+    window.closeSmartlinkInterstitial();
+};
+
+function triggerSmartlinkInterstitial() {
+    const now = Date.now();
+    if (now < interstitialNextAllowedTime) return;
+    if (interstitialActive) return;
+
+    const modal = document.getElementById('smartlinkInterstitialModal');
+    const iframe = document.getElementById('smartlinkAdIframe');
+    const skipBtn = document.getElementById('interstitialSkipBtn');
+    const countdownEl = document.getElementById('interstitialCountdown');
+    const timerNotice = document.getElementById('interstitialTimerNotice');
+
+    if (!modal || !iframe || !skipBtn || !countdownEl) return;
+
+    interstitialActive = true;
+    interstitialNextAllowedTime = now + INTERSTITIAL_INTERVAL_MS;
+
+    let timeLeft = 15;
+    countdownEl.innerText = timeLeft;
+    skipBtn.innerHTML = '<i class="fa-solid fa-lock"></i> ' + timeLeft + 's';
+    skipBtn.classList.add('disabled');
+    skipBtn.disabled = true;
+    if (timerNotice) timerNotice.style.display = 'block';
+
+    modal.style.display = 'flex';
+    iframe.src = SMARTLINK_URL;
+
+    if (interstitialCountdownTimer) clearInterval(interstitialCountdownTimer);
+    interstitialCountdownTimer = setInterval(() => {
+        timeLeft--;
+        if (timeLeft > 0) {
+            countdownEl.innerText = timeLeft;
+            skipBtn.innerHTML = '<i class="fa-solid fa-lock"></i> ' + timeLeft + 's';
+        } else {
+            clearInterval(interstitialCountdownTimer);
+            interstitialCountdownTimer = null;
+            skipBtn.classList.remove('disabled');
+            skipBtn.disabled = false;
+            skipBtn.innerHTML = '<i class="fa-solid fa-xmark"></i> Skip Ad';
+            if (timerNotice) timerNotice.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #2ea043;"></i> Ready to Skip';
+        }
+    }, 1000);
+}
+
+window.closeSmartlinkInterstitial = function() {
+    const modal = document.getElementById('smartlinkInterstitialModal');
+    const iframe = document.getElementById('smartlinkAdIframe');
+    if (interstitialCountdownTimer) {
+        clearInterval(interstitialCountdownTimer);
+        interstitialCountdownTimer = null;
+    }
+    if (iframe) iframe.src = 'about:blank';
+    if (modal) modal.style.display = 'none';
+    interstitialActive = false;
+};
+
+// 300x250 Medium Rectangle Native Ad Units
+function renderAd300x250Iframe(container) {
+    if (!container || container.dataset.loaded === 'true') return;
+    container.dataset.loaded = 'true';
+
+    const iframe = document.createElement('iframe');
+    iframe.width = '300';
+    iframe.height = '250';
+    iframe.style.width = '300px';
+    iframe.style.height = '250px';
+    iframe.style.border = 'none';
+    iframe.style.overflow = 'hidden';
+    iframe.scrolling = 'no';
+    iframe.setAttribute('frameborder', '0');
+    iframe.setAttribute('marginwidth', '0');
+    iframe.setAttribute('marginheight', '0');
+    iframe.setAttribute('allowtransparency', 'true');
+
+    const adHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: transparent;
+            overflow: hidden;
+            width: 300px;
+            height: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <script type="text/javascript">
+        var origOpen = window.open;
+        window.open = function(url) {
+            try {
+                if (window.parent && window.parent.openInChrome) {
+                    window.parent.openInChrome(url);
+                    return null;
+                }
+            } catch (e) {}
+            return origOpen.apply(window, arguments);
+        };
+        document.addEventListener('click', function(e) {
+            try {
+                var target = e.target;
+                if (!target || typeof target.closest !== 'function') return;
+                var a = target.closest('a');
+                if (a && a.href && a.href !== '#' && !a.href.startsWith('javascript:')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try {
+                        if (window.parent && window.parent.openInChrome) {
+                            window.parent.openInChrome(a.href);
+                            return;
+                        }
+                    } catch (err) {}
+                    window.open(a.href, '_blank');
+                }
+            } catch (err) {}
+        }, true);
+    <\/script>
+    <script type="text/javascript">
+        atOptions = {
+            'key' : '0b1e87c8ccc1319d59bdeee59249318d',
+            'format' : 'iframe',
+            'height' : 250,
+            'width' : 300,
+            'params' : {}
+        };
+    <\/script>
+    <script type="text/javascript" src="https://www.highrevenueformat.com/0b1e87c8ccc1319d59bdeee59249318d/invoke.js"><\/script>
+</body>
+</html>`;
+
+    container.appendChild(iframe);
+    try {
+        iframe.contentWindow.document.open();
+        iframe.contentWindow.document.write(adHtml);
+        iframe.contentWindow.document.close();
+    } catch (e) {
+        iframe.srcdoc = adHtml;
+    }
+}
+
+// 320x50 Banner Ad Units (Key: fec896668e376077dc0281401ab2b9ad)
+function renderBanner320x50(container) {
+    if (!container) return;
+    container.innerHTML = '';
+
+    const iframe = document.createElement('iframe');
+    iframe.width = '320';
+    iframe.height = '50';
+    iframe.style.width = '320px';
+    iframe.style.height = '50px';
+    iframe.style.border = 'none';
+    iframe.style.overflow = 'hidden';
+    iframe.scrolling = 'no';
+    iframe.setAttribute('frameborder', '0');
+    iframe.setAttribute('marginwidth', '0');
+    iframe.setAttribute('marginheight', '0');
+    iframe.setAttribute('allowtransparency', 'true');
+
+    const adHtml = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: transparent;
+            overflow: hidden;
+            width: 320px;
+            height: 50px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <script type="text/javascript">
+        var origOpen = window.open;
+        window.open = function(url) {
+            try {
+                if (window.parent && window.parent.openInChrome) {
+                    window.parent.openInChrome(url);
+                    return null;
+                }
+            } catch (e) {}
+            return origOpen.apply(window, arguments);
+        };
+        document.addEventListener('click', function(e) {
+            try {
+                var target = e.target;
+                if (!target || typeof target.closest !== 'function') return;
+                var a = target.closest('a');
+                if (a && a.href && a.href !== '#' && !a.href.startsWith('javascript:')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    try {
+                        if (window.parent && window.parent.openInChrome) {
+                            window.parent.openInChrome(a.href);
+                            return;
+                        }
+                    } catch (err) {}
+                    window.open(a.href, '_blank');
+                }
+            } catch (err) {}
+        }, true);
+    <\/script>
+    <script type="text/javascript">
+        atOptions = {
+            'key' : 'fec896668e376077dc0281401ab2b9ad',
+            'format' : 'iframe',
+            'height' : 50,
+            'width' : 320,
+            'params' : {}
+        };
+    <\/script>
+    <script type="text/javascript" src="https://www.highrevenueformat.com/fec896668e376077dc0281401ab2b9ad/invoke.js"><\/script>
+</body>
+</html>`;
+
+    container.appendChild(iframe);
+    try {
+        iframe.contentWindow.document.open();
+        iframe.contentWindow.document.write(adHtml);
+        iframe.contentWindow.document.close();
+    } catch (e) {
+        iframe.srcdoc = adHtml;
+    }
+}
+
+let topAdRefreshTimer = null;
+let footerAdRefreshTimer = null;
+
+function initMusicAds() {
+    // 1. Top Banner 320x50
+    const topInner = document.getElementById('musicTopAdInner');
+    if (topInner) {
+        renderBanner320x50(topInner);
+        if (topAdRefreshTimer) clearInterval(topAdRefreshTimer);
+        topAdRefreshTimer = setInterval(() => {
+            renderBanner320x50(topInner);
+        }, 50000);
+    }
+
+    // 2. Fixed Footer Banner 320x50
+    const footerInner = document.getElementById('musicFixedFooterAdInner');
+    if (footerInner) {
+        renderBanner320x50(footerInner);
+        if (footerAdRefreshTimer) clearInterval(footerAdRefreshTimer);
+        footerAdRefreshTimer = setInterval(() => {
+            renderBanner320x50(footerInner);
+        }, 48000);
+    }
+}
+
+// ==========================================
+// MUSIC PLAYER ENGINE
+// ==========================================
+let songsList = [], currentQueue = [], currentPlaylist = [], currentSongIndex = 0;
+const audio = document.getElementById('audioPlayer');
+const range = document.getElementById('audioRange');
+const curTimeSpan = document.getElementById('currentTime');
+const durTimeSpan = document.getElementById('durationTime');
+const playPauseImg = document.getElementById('playPauseImg');
+
+const ICON_PLAY = "play.png";
+const ICON_PAUSE = "pause.png";
+const FALLBACK_PLAY = "https://raw.githubusercontent.com/shortsproeran-creator/mt/main/1784458824699_play.png";
+const FALLBACK_PAUSE = "https://raw.githubusercontent.com/shortsproeran-creator/mt/main/1784459617609_pouse.png";
+
+function setPlayPauseIcon(isPlaying) {
+    if (!playPauseImg) return;
+    if (isPlaying) {
+        playPauseImg.src = ICON_PAUSE;
+        playPauseImg.onerror = function() {
+            this.src = "pouse.png";
+            this.onerror = function() { this.src = FALLBACK_PAUSE; };
+        };
+    } else {
+        playPauseImg.src = ICON_PLAY;
+        playPauseImg.onerror = function() {
+            this.src = FALLBACK_PLAY;
+        };
+    }
+}
+
+function shuffleArray(array) { return [...array].sort(() => Math.random() - 0.5); }
+function formatTime(s) { 
+    if (isNaN(s) || s < 0) return "0:00";
+    let m = Math.floor(s / 60), sec = Math.floor(s % 60); 
+    return m + ":" + (sec < 10 ? "0" + sec : sec); 
+}
+
+async function loadMusic() {
+    try {
+        const res = await fetch("https://raw.githubusercontent.com/appcreator05/post/main/6766846.json");
+        songsList = await res.json();
+        currentQueue = [];
+        songsList.forEach(m => {
+            if (Array.isArray(m.songs)) {
+                m.songs.forEach(s => currentQueue.push({ ...s, poster: m.poster, movie: m.movie, category: m.category }));
+            }
+        });
+        currentPlaylist = shuffleArray(currentQueue);
+        
+        renderMusicList(currentPlaylist.slice(0, 100));
+        loadCategories();
+        initMusicAds();
+
+        setTimeout(() => {
+            if (currentPlaylist.length > 0) {
+                playMusic(0, true); 
+            }
+        }, 800);
+    } catch (err) {
+        console.error("Failed to load songs:", err);
+        const list = document.getElementById('musicList');
+        if (list) {
+            list.innerHTML = `<div style="text-align:center; padding:40px; color:#ff3b30;">Failed to load music playlist. Please check internet connection.</div>`;
+        }
+    }
+}
+
+function renderMusicList(songs) {
+    const list = document.getElementById('musicList');
+    if (!list) return;
+    const fragment = document.createDocumentFragment();
+    list.innerHTML = "";
+
+    const displayLimit = songs.slice(0, 200); 
+
+    displayLimit.forEach((song, i) => {
+        const isPlaying = (song.id === (currentPlaylist[currentSongIndex] ? currentPlaylist[currentSongIndex].id : null));
+        const div = document.createElement('div');
+        div.className = 'song-item' + (isPlaying ? ' active' : '');
+        
+        div.innerHTML = `<img src="${song.poster || ''}" referrerpolicy="no-referrer" loading="lazy" class="song-img" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=100&auto=format&fit=crop&q=60';" onclick="openModal('${song.poster}', event)">
+                         <div class="song-text-container" onclick="playMusic(${i})">
+                             <strong>${song.title}</strong>
+                             <small>${song.movie || ''}</small>
+                         </div>`;
+        fragment.appendChild(div);
+
+        // Insert native 300x250 ad unit after every 10 songs
+        if ((i + 1) % 10 === 0 && i < displayLimit.length - 1) {
+            const adWrapper = document.createElement('div');
+            adWrapper.className = 'ad-slot-300x250';
+            adWrapper.innerHTML = `
+                <span class="ad-label">Advertisement</span>
+                <div class="ad-slot-300x250-inner"></div>
+            `;
+            const adInner = adWrapper.querySelector('.ad-slot-300x250-inner');
+            fragment.appendChild(adWrapper);
+            renderAd300x250Iframe(adInner);
+        }
+    });
+
+    list.appendChild(fragment);
+}
+
+function openModal(imgSrc, event) { 
+    if (event) event.stopPropagation(); 
+    document.getElementById('modalImg').src = imgSrc; 
+    document.getElementById('imageModal').style.display = 'flex'; 
+    const miniPlayer = document.getElementById('miniPlayer');
+    if (miniPlayer && currentPlaylist && currentPlaylist.length > 0) {
+        miniPlayer.style.display = 'flex';
+    }
+}
+
+function closeModal() { 
+    document.getElementById('imageModal').style.display = 'none'; 
+}
+
+function playMusic(index, isInitial = false) {
+    if (!currentPlaylist || index >= currentPlaylist.length) return;
+    const song = currentPlaylist[index]; 
+    currentSongIndex = index;
+
+    audio.src = `https://www.googleapis.com/drive/v3/files/${song.id}?alt=media&key=AIzaSyAwS9f57z785lDD9aKedEEJVol_-P518v0`;
+    document.getElementById('nowPlaying').innerText = song.title + (song.movie ? ` • ${song.movie}` : '');
+    
+    const miniPlayer = document.getElementById('miniPlayer');
+    if (miniPlayer) miniPlayer.style.display = 'flex';
+    
+    if (document.getElementById('imageModal').style.display === 'flex') {
+        document.getElementById('modalImg').src = song.poster;
+    }
+    
+    const playPromise = audio.play(); 
+    if (playPromise !== undefined) {
+        playPromise.then(() => {
+            setPlayPauseIcon(true);
+        }).catch(err => {
+            setPlayPauseIcon(false);
+        });
+    }
+
+    renderMusicList(currentPlaylist);
+    
+    setTimeout(() => {
+        const activeElement = document.querySelector('.song-item.active');
+        if (activeElement) activeElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 120);
+
+    // Occasional interstitial ad trigger on user interaction
+    if (!isInitial && Math.random() < 0.25) {
+        triggerSmartlinkInterstitial();
+    }
+}
+
+function nextSong() { 
+    if (currentPlaylist.length === 0) return;
+    currentSongIndex = (currentSongIndex + 1) % currentPlaylist.length; 
+    playMusic(currentSongIndex); 
+}
+
+function prevSong() { 
+    if (currentPlaylist.length === 0) return;
+    currentSongIndex = (currentSongIndex - 1 + currentPlaylist.length) % currentPlaylist.length; 
+    playMusic(currentSongIndex); 
+}
+
+function togglePlay() {
+    if (audio.paused) {
+        audio.play().then(() => {
+            setPlayPauseIcon(true); 
+        }).catch(() => {});
+    } else {
+        audio.pause();
+        setPlayPauseIcon(false);
+    }
+}
+
+audio.addEventListener('timeupdate', () => {
+    if (!isNaN(audio.duration) && audio.duration > 0) {
+        range.value = (audio.currentTime / audio.duration) * 100;
+        curTimeSpan.innerText = formatTime(audio.currentTime);
+        durTimeSpan.innerText = formatTime(audio.duration);
+    }
+});
+
+audio.addEventListener('loadedmetadata', () => {
+    durTimeSpan.innerText = formatTime(audio.duration);
+});
+
+range.addEventListener('input', () => {
+    if (!isNaN(audio.duration)) {
+        audio.currentTime = (range.value / 100) * audio.duration;
+    }
+});
+
+audio.addEventListener('ended', nextSong);
+
+function toggleSidebar() { 
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    if (sidebar.style.width === "270px") {
+        sidebar.style.width = "0";
+        if (overlay) overlay.style.display = "none";
+    } else {
+        sidebar.style.width = "270px";
+        if (overlay) overlay.style.display = "block";
+    }
+}
+
+function loadCategories() { 
+    const sidebar = document.getElementById("sidebar"); 
+    [...new Set(songsList.map(item => item.category))].filter(Boolean).forEach(cat => { 
+        const a = document.createElement("a"); 
+        a.href = "javascript:void(0)"; 
+        a.innerHTML = `<i class="fa-solid fa-compact-disc" style="margin-right: 8px; color: #ff3b30;"></i> ${cat}`; 
+        
+        a.onclick = (e) => { 
+            e.preventDefault(); 
+            e.stopPropagation(); 
+            filterByCategory(cat);
+            toggleSidebar();
+        }; 
+        sidebar.appendChild(a); 
+    }); 
+}
+
+function filterByCategory(cat) { 
+    audio.pause(); 
+    audio.currentTime = 0;
+    setPlayPauseIcon(false);
+    document.getElementById('nowPlaying').innerText = "Select a song (" + cat + ")";
+    
+    const filteredSongs = shuffleArray(currentQueue.filter(s => s.category === cat));
+    currentPlaylist = filteredSongs;
+    currentSongIndex = 0; 
+    
+    renderMusicList(currentPlaylist); 
+}
+
+let searchTimeout;
+function filterMusicList() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        let val = document.getElementById('musicSearch').value.toLowerCase().trim();
+        if (!val) {
+            currentPlaylist = currentQueue;
+        } else {
+            let filtered = currentQueue.filter(s => 
+                (s.title && s.title.toLowerCase().includes(val)) || 
+                (s.movie && s.movie.toLowerCase().includes(val)) ||
+                (s.category && s.category.toLowerCase().includes(val))
+            );
+            currentPlaylist = filtered; 
+        }
+        renderMusicList(currentPlaylist); 
+    }, 300);
+}
+
+function stopMusic() {
+    audio.pause(); 
+    audio.currentTime = 0;
+    setPlayPauseIcon(false);
+    document.getElementById('miniPlayer').style.display = 'none';
+}
+  
+function showAllSongs() { 
+    currentPlaylist = shuffleArray(currentQueue); 
+    renderMusicList(currentPlaylist); 
+    toggleSidebar(); 
+}
+
+loadMusic();
+</script>
+
+</body>
+</html>
