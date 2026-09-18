@@ -30,7 +30,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-[#0b0e14]/95 backdrop-blur-md border-b border-gray-800/80 px-2.5 py-2 sm:px-6 sm:py-3 pt-[calc(0.5rem+env(safe-area-inset-top,0px))]">
+      <header className="sticky top-0 z-30 bg-[#0b0e14]/95 backdrop-blur-md border-b border-gray-800/80 px-2.5 py-2 sm:px-6 sm:py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
           
           {/* Left: Logo & Menu & Music & VIP Toggles */}

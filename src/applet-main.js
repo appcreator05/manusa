@@ -167,8 +167,8 @@ async function requestContinuousWakeLock() {
     try {
         const { StatusBar } = await import('@capacitor/status-bar');
         if (StatusBar) {
-            await StatusBar.hide().catch(() => {});
             await StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+            await StatusBar.hide().catch(() => {});
         }
     } catch (e) {}
 

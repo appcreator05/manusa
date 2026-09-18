@@ -11,6 +11,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import androidx.core.content.FileProvider;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
@@ -151,11 +152,20 @@ public class MainActivity extends BridgeActivity {
                             );
                         }
                     });
+
+                    // Zero out all system insets so no padding or gap is added on top/bottom
+                    ViewCompat.setOnApplyWindowInsetsListener(decorView, (v, insets) -> {
+                        return WindowInsetsCompat.CONSUMED;
+                    });
                 }
 
-                // Ensure the underlying Capacitor WebView fitsSystemWindows is set to false
+                // Ensure the underlying Capacitor WebView fitsSystemWindows is set to false and zero insets
                 if (getBridge() != null && getBridge().getWebView() != null) {
-                    getBridge().getWebView().setFitsSystemWindows(false);
+                    View webView = getBridge().getWebView();
+                    webView.setFitsSystemWindows(false);
+                    ViewCompat.setOnApplyWindowInsetsListener(webView, (v, insets) -> {
+                        return WindowInsetsCompat.CONSUMED;
+                    });
                 }
             } catch (Exception e) {
                 e.printStackTrace();

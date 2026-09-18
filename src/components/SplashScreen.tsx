@@ -58,10 +58,6 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({
       className={`fixed inset-0 z-[9999] w-full h-[100dvh] bg-black flex items-center justify-center overflow-hidden transition-opacity duration-500 ease-out select-none cursor-pointer ${
         isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}
-      style={{
-        paddingTop: 'env(safe-area-inset-top, 0px)',
-        paddingBottom: 'env(safe-area-inset-bottom, 0px)'
-      }}
     >
       {/* Background Ambience on Desktop/Tablet */}
       <div

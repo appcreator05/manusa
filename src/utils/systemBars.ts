@@ -33,8 +33,8 @@ export const hideSystemNavigation = async () => {
   // 3. Capacitor Android Status Bar Plugin (@capacitor/status-bar)
   try {
     const { StatusBar } = await import('@capacitor/status-bar');
-    await StatusBar.hide();
-    await StatusBar.setOverlaysWebView({ overlay: true });
+    await StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+    await StatusBar.hide().catch(() => {});
   } catch {
     // Graceful fallback for non-native web environment
   }
