@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Menu, Mic, X, Music } from 'lucide-react';
+import { Menu, Mic, X, Music, Crown } from 'lucide-react';
 import { StartIoConfig, AdStats } from '../types';
 import { VoiceSearchModal } from './VoiceSearchModal';
 import { VDOSKyLogo } from './VDOSKyLogo';
@@ -7,6 +7,8 @@ import { VDOSKyLogo } from './VDOSKyLogo';
 interface HeaderProps {
   onOpenMenu: () => void;
   onOpenMusicSection?: () => void;
+  onOpenSubscriptionSection?: () => void;
+  isSubscribed?: boolean;
   onOpenAdConfig?: () => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
@@ -18,6 +20,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   onOpenMenu,
   onOpenMusicSection,
+  onOpenSubscriptionSection,
+  isSubscribed,
   searchQuery,
   onSearchChange,
   onLogoClick,
@@ -29,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
       <header className="sticky top-0 z-30 bg-[#0b0e14]/95 backdrop-blur-md border-b border-gray-800/80 px-2.5 py-2 sm:px-6 sm:py-3 pt-[calc(0.5rem+env(safe-area-inset-top,0px))]">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 sm:gap-4">
           
-          {/* Left: Logo & Menu & Music Toggles */}
+          {/* Left: Logo & Menu & Music & VIP Toggles */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
             <button
               id="btn-header-logo"
@@ -49,6 +53,25 @@ export const Header: React.FC<HeaderProps> = ({
               <Menu className="w-5 h-5 stroke-[2.5]" />
               <span className="text-xs sm:text-sm font-black tracking-wide">Menu</span>
             </button>
+
+            {/* VIP Ad-Free Subscription Button */}
+            {onOpenSubscriptionSection && (
+              <button
+                id="btn-header-subscription"
+                onClick={onOpenSubscriptionSection}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl transition-all shadow-md cursor-pointer text-xs sm:text-sm font-black active:scale-95 border ${
+                  isSubscribed
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400/60 shadow-emerald-950/40'
+                    : 'bg-gradient-to-r from-[#8A0EDF] via-[#9e1beb] to-[#c54bff] text-white border-purple-300/80 shadow-lg shadow-purple-950/60 hover:brightness-110'
+                }`}
+                title="VIP Subscription (Ad-Free)"
+              >
+                <Crown className="w-4 h-4 text-amber-300 fill-current shrink-0 animate-bounce" />
+                <span className="inline tracking-wide font-black">
+                  {isSubscribed ? 'VIP Active' : 'VIP'}
+                </span>
+              </button>
+            )}
 
             {onOpenMusicSection && (
               <button

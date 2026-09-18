@@ -8,6 +8,7 @@ import { StartIoRewardedVideoAd } from './components/StartIoRewardedVideoAd';
 import { SmartlinkInterstitialAd, SMARTLINK_DEFAULT_URL } from './components/SmartlinkInterstitialAd';
 import { DrawerMenu } from './components/DrawerMenu';
 import { MusicSection } from './components/MusicSection';
+import { SubscriptionSection } from './components/SubscriptionSection';
 import { StartIoConfigModal } from './components/StartIoConfigModal';
 import { PageLoadingIndicator, TopProgressBar } from './components/PageLoadingIndicator';
 import { SplashScreen } from './components/SplashScreen';
@@ -27,7 +28,9 @@ import {
   RefreshCw,
   ArrowLeft,
   Film,
-  Sparkles
+  Sparkles,
+  Crown,
+  ArrowRight
 } from 'lucide-react';
 import { hideSystemNavigation } from './utils/systemBars';
 import { requestScreenWakeLock } from './utils/wakeLock';
@@ -40,6 +43,11 @@ import {
 } from './utils/startIoAndroidBridge';
 import { AutoUpdateModal } from './components/AutoUpdateModal';
 import { checkForAppUpdate, AppUpdateData, CURRENT_APP_VERSION } from './services/updateService';
+import {
+  getCachedIsSubscribed,
+  getStoredSafeId,
+  checkAndHandleSubscriptionExpiry
+} from './services/subscriptionService';
 
 const GRID_BATCH_SIZE = 20; // 20 items loaded per lazy scroll batch
 
@@ -126,6 +134,45 @@ export default function App() {
     isMusicViewRef.current = isMusicView;
   }, [isMusicView]);
 
+  // Dedicated VIP / Ad-Free Subscription Section state
+  const [isSubscriptionView, setIsSubscriptionView] = useState(false);
+  const isSubscriptionViewRef = useRef(false);
+  const [isSubscribed, setIsSubscribed] = useState<boolean>(() => getCachedIsSubscribed());
+  const isSubscribedRef = useRef(isSubscribed);
+
+  useEffect(() => {
+    isSubscriptionViewRef.current = isSubscriptionView;
+  }, [isSubscriptionView]);
+
+  useEffect(() => {
+    isSubscribedRef.current = isSubscribed;
+    // Set global flag so other components/modules know subscription status
+    (window as any).__hasActiveSubscription = isSubscribed;
+  }, [isSubscribed]);
+
+  // Periodic subscription & auto-expiry verification
+  // When expiry is detected: auto deletes the subkey from Firebase & restarts ads immediately
+  useEffect(() => {
+    const verifySubscription = async () => {
+      const safeId = getStoredSafeId();
+      if (!safeId) {
+        setIsSubscribed(false);
+        return;
+      }
+      try {
+        const result = await checkAndHandleSubscriptionExpiry(safeId);
+        setIsSubscribed(result.isSubscribed);
+      } catch (e) {
+        console.warn('[Subscription] Auto verification error:', e);
+      }
+    };
+
+    verifySubscription();
+    // Check every 15 seconds so that as soon as validity expires, subkey is deleted and ads resume
+    const timer = setInterval(verifySubscription, 15000);
+    return () => clearInterval(timer);
+  }, []);
+
   // Configuration for Start.io ads (Real App ID: 203877183)
   const [startIoConfig, setStartIoConfig] = useState<StartIoConfig>(() => {
     const defaultConf: StartIoConfig = {
@@ -195,6 +242,13 @@ export default function App() {
           else if ((document as any).webkitExitFullscreen) (document as any).webkitExitFullscreen();
         }
       } catch {}
+      return true;
+    }
+
+    if (isSubscriptionViewRef.current) {
+      triggerPageTransition(() => {
+        setIsSubscriptionView(false);
+      }, 'Returning to Movies...');
       return true;
     }
 
@@ -297,8 +351,8 @@ export default function App() {
       requestScreenWakeLock();
     }, 1200);
 
-    // If running in native Android APK, trigger native Start.io banner
-    if (isNativeAndroidApk()) {
+    // If running in native Android APK and user is not VIP subscribed, trigger native Start.io banner
+    if (isNativeAndroidApk() && !isSubscribedRef.current) {
       triggerNativeStartIoBanner();
     }
 
@@ -337,6 +391,9 @@ export default function App() {
     }
 
     const intervalId = setInterval(() => {
+      // If user has active VIP subscription, completely skip periodic interstitials
+      if (isSubscribedRef.current) return;
+
       const lastTime = parseInt(localStorage.getItem('vdosky_last_interstitial') || '0', 10);
       const elapsed = Date.now() - (lastTime || Date.now());
       if (elapsed >= INTERSTITIAL_INTERVAL_MS) {
@@ -510,6 +567,15 @@ export default function App() {
   const handleMoviePosterClick = (movie: Movie) => {
     setClickedMovieId(movie.id);
 
+    // If user has an active VIP subscription: ZERO ADS, stream starts immediately!
+    if (isSubscribed) {
+      setClickedMovieId(null);
+      triggerPageTransition(() => {
+        setSelectedMovie(movie);
+      }, 'Starting VIP Ad-Free Stream...');
+      return;
+    }
+
     // 1. Android Native APK: Launch official native Start.io Rewarded Video SDK
     // Start.io native activity takes over fullscreen with its real timer and skip button
     if (isNativeAndroidApk()) {
@@ -564,6 +630,8 @@ export default function App() {
     triggerPageTransition(() => {
       setSelectedMovie(null);
       setActiveCategoryPage(null);
+      setIsMusicView(false);
+      setIsSubscriptionView(false);
       setSearchQuery('');
       setSelectedCategory('all');
     }, 'Loading Home...');
@@ -685,13 +753,21 @@ export default function App() {
         </div>
       )}
 
-      {/* Header with VDOSKy logo & voice search (Hidden when video is playing in fullscreen or in Music section) */}
-      {!isPlayerFullscreen && !isMusicView && (
+      {/* Header with VDOSKy logo & voice search (Hidden when video is playing in fullscreen, in Music section, or in Subscription section) */}
+      {!isPlayerFullscreen && !isMusicView && !isSubscriptionView && (
         <Header
           onOpenMenu={() => setShowDrawerMenu(true)}
+          onOpenSubscriptionSection={() => {
+            setSelectedMovie(null);
+            setActiveCategoryPage(null);
+            setIsMusicView(false);
+            setIsSubscriptionView(true);
+          }}
+          isSubscribed={isSubscribed}
           onOpenMusicSection={() => {
             setSelectedMovie(null);
             setActiveCategoryPage(null);
+            setIsSubscriptionView(false);
             setIsMusicView(true);
           }}
           onOpenAdConfig={() => setShowAdConfigModal(true)}
@@ -710,6 +786,7 @@ export default function App() {
         selectedCategory={activeCategoryPage ? activeCategoryPage.slug : selectedCategory}
         onSelectCategory={(catId) => {
           setIsMusicView(false);
+          setIsSubscriptionView(false);
           if (catId === 'all') {
             setActiveCategoryPage(null);
             setSelectedCategory('all');
@@ -724,9 +801,18 @@ export default function App() {
           }
           setShowDrawerMenu(false);
         }}
+        onOpenSubscriptionSection={() => {
+          setSelectedMovie(null);
+          setActiveCategoryPage(null);
+          setIsMusicView(false);
+          setIsSubscriptionView(true);
+          setShowDrawerMenu(false);
+        }}
+        isSubscribed={isSubscribed}
         onOpenMusicSection={() => {
           setSelectedMovie(null);
           setActiveCategoryPage(null);
+          setIsSubscriptionView(false);
           setIsMusicView(true);
           setShowDrawerMenu(false);
         }}
@@ -751,8 +837,8 @@ export default function App() {
         onTestInterstitial={handleTestInterstitial}
       />
 
-      {/* Start.io Rewarded Video Ad Modal (Triggers on Movie Poster Click to Unlock HD Stream) */}
-      {interstitialPendingMovie && (
+      {/* Start.io Rewarded Video Ad Modal (Triggers on Movie Poster Click to Unlock HD Stream - Blocked if Subscribed) */}
+      {!isSubscribed && interstitialPendingMovie && (
         <StartIoRewardedVideoAd
           movie={interstitialPendingMovie}
           onCloseAndPlay={handleInterstitialComplete}
@@ -763,23 +849,31 @@ export default function App() {
         />
       )}
 
-      {/* 15-Minute Periodic Fullscreen Interstitial Ad (Smartlink CPM Network) */}
-      <SmartlinkInterstitialAd
-        isOpen={showPeriodicInterstitial}
-        onClose={() => setShowPeriodicInterstitial(false)}
-        smartlinkUrl={startIoConfig.customAdUrl || SMARTLINK_DEFAULT_URL}
-        wasFullscreen={isPlayerFullscreen}
-      />
+      {/* 15-Minute Periodic Fullscreen Interstitial Ad (Smartlink CPM Network - Blocked if Subscribed) */}
+      {!isSubscribed && (
+        <SmartlinkInterstitialAd
+          isOpen={showPeriodicInterstitial}
+          onClose={() => setShowPeriodicInterstitial(false)}
+          smartlinkUrl={startIoConfig.customAdUrl || SMARTLINK_DEFAULT_URL}
+          wasFullscreen={isPlayerFullscreen}
+        />
+      )}
 
       {/* 
         MAIN CONTENT ROUTING:
-        1. MusicSection: Dedicated Online Music Player
-        2. MoviePlayPage: When watching a movie
-        3. CategoryViewSection: Dedicated full page when user clicks "Show All" on a category
-        4. Search / Filter View: When user searches for a title
-        5. Home Feed View: Horizontal category rows
+        1. SubscriptionSection: Dedicated VIP Wallet & Ad-Free Plans
+        2. MusicSection: Dedicated Online Music Player
+        3. MoviePlayPage: When watching a movie
+        4. CategoryViewSection: Dedicated full page when user clicks "Show All" on a category
+        5. Search / Filter View: When user searches for a title
+        6. Home Feed View: Horizontal category rows
       */}
-      {isMusicView ? (
+      {isSubscriptionView ? (
+        <SubscriptionSection
+          onBack={() => setIsSubscriptionView(false)}
+          onSubscriptionStatusChange={(status) => setIsSubscribed(status)}
+        />
+      ) : isMusicView ? (
         <MusicSection onBack={() => setIsMusicView(false)} />
       ) : selectedMovie ? (
         <MoviePlayPage
@@ -790,6 +884,7 @@ export default function App() {
           onSelectCategory={handleOpenCategoryPage}
           onAdClick={recordAdClick}
           onFullscreenChange={setIsPlayerFullscreen}
+          isSubscribed={isSubscribed}
         />
       ) : activeCategoryPage ? (
         /* DEDICATED SEPARATE CATEGORY SECTION / PAGE */
@@ -827,7 +922,7 @@ export default function App() {
             </div>
 
             {/* In-feed Start.io Native Ad (300x250px) in Category View */}
-            {startIoConfig.enableNative && (
+            {startIoConfig.enableNative && !isSubscribed && (
               <div className="my-5 flex justify-center">
                 <StartIoNativeAd
                   variant="mrec-300x250"
@@ -911,7 +1006,7 @@ export default function App() {
               </div>
 
               {/* Start.io Native Ad (300x250px) in Search View */}
-              {startIoConfig.enableNative && (
+              {startIoConfig.enableNative && !isSubscribed && (
                 <div className="my-5 flex justify-center">
                   <StartIoNativeAd
                     variant="mrec-300x250"
@@ -969,6 +1064,65 @@ export default function App() {
           ) : (
             <div className="max-w-7xl mx-auto px-3 sm:px-6 pt-4 space-y-7">
               
+              {/* Prominent VIP Subscription Banner at Top of Home Feed */}
+              <div
+                id="banner-home-vip-subscription"
+                onClick={() => {
+                  setSelectedMovie(null);
+                  setActiveCategoryPage(null);
+                  setIsMusicView(false);
+                  setIsSubscriptionView(true);
+                }}
+                className={`w-full rounded-2xl p-3.5 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 cursor-pointer transition-all shadow-xl active:scale-[0.99] border-2 ${
+                  isSubscribed
+                    ? 'bg-gradient-to-r from-emerald-950/90 via-teal-950/80 to-[#0c1f17] border-emerald-500/70 shadow-emerald-950/40'
+                    : 'bg-gradient-to-r from-[#240638] via-[#1a082c] to-[#120722] border-[#8A0EDF] shadow-purple-950/60 hover:border-[#c54bff]'
+                }`}
+              >
+                <div className="flex items-center gap-3.5 w-full sm:w-auto">
+                  <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-[#8A0EDF] to-amber-400 p-0.5 shrink-0 shadow-lg shadow-purple-950/50 flex items-center justify-center">
+                    <div className="w-full h-full bg-[#12071f] rounded-[14px] flex items-center justify-center">
+                      <Crown className="w-6 h-6 text-[#FFD700] fill-current animate-bounce" />
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm sm:text-base font-black text-white tracking-wide">
+                        {isSubscribed ? 'VIP Subscription Active' : 'VIP Ad-Free Subscription (ভিআইপি প্ল্যান)'}
+                      </span>
+                      {isSubscribed ? (
+                        <span className="bg-emerald-500/30 text-emerald-300 text-[10px] font-mono px-2 py-0.5 rounded-full border border-emerald-500/50">
+                          100% AD-FREE
+                        </span>
+                      ) : (
+                        <span className="bg-amber-400 text-black text-[10px] font-black px-2 py-0.5 rounded-full shadow">
+                          NO ADS
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-purple-200/90 mt-0.5">
+                      {isSubscribed
+                        ? 'আপনার ভিআইপি মেম্বারশিপ সক্রিয় — সব ধরনের বিজ্ঞাপন ব্লক করা হয়েছে!'
+                        : 'মোবাইল নম্বর বা ইমেইল দিয়ে লগইন করে ওয়ালেট রিচার্জ করুন এবং বিজ্ঞাপন ছাড়া মুভি দেখুন।'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="w-full sm:w-auto flex items-center justify-end shrink-0">
+                  <button
+                    type="button"
+                    className={`w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-black flex items-center justify-center gap-2 transition-all shadow-md ${
+                      isSubscribed
+                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                        : 'bg-gradient-to-r from-[#8A0EDF] to-[#c54bff] text-white hover:brightness-110 shadow-purple-950/50'
+                    }`}
+                  >
+                    <span>{isSubscribed ? 'Manage VIP' : 'Open VIP Plans 👑'}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
               {/* Dynamic Categories: Horizontal Rows with "Show All" opening a dedicated section */}
               {categoryGroups.map((group, groupIndex) => {
                 const previewMovies = group.movies.slice(0, 10);
@@ -1031,7 +1185,7 @@ export default function App() {
                         )}
 
                         {/* Blended Native Card Ad in row */}
-                        {startIoConfig.enableNative && (
+                        {startIoConfig.enableNative && !isSubscribed && (
                           <StartIoNativeAd
                             variant="card"
                             adIndex={groupIndex % 4}
@@ -1042,7 +1196,7 @@ export default function App() {
                     </section>
 
                     {/* Inject In-feed Start.io Ad (Alternating between 300x250 Native and 300x250 Banner) every 2nd category row */}
-                    {startIoConfig.enableNative && groupIndex % 2 === 1 && (
+                    {startIoConfig.enableNative && !isSubscribed && groupIndex % 2 === 1 && (
                       <div className="my-6 flex justify-center">
                         <StartIoNativeAd
                           variant="mrec-300x250"
@@ -1061,8 +1215,32 @@ export default function App() {
         </main>
       )}
 
-      {/* Sticky Bottom Start.io Banner Ad (Hidden when video is playing in fullscreen) */}
-      {startIoConfig.enableBanner && !isPlayerFullscreen && (
+      {/* Floating Quick Access VIP Button (always visible on bottom-right so user never misses it) */}
+      {!isPlayerFullscreen && !isSubscriptionView && (
+        <button
+          id="btn-floating-vip"
+          onClick={() => {
+            setSelectedMovie(null);
+            setActiveCategoryPage(null);
+            setIsMusicView(false);
+            setIsSubscriptionView(true);
+          }}
+          className={`fixed z-40 right-3.5 bottom-16 sm:bottom-16 flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-full border shadow-2xl transition-all active:scale-95 cursor-pointer backdrop-blur-md ${
+            isSubscribed
+              ? 'bg-emerald-950/90 border-emerald-400/80 text-emerald-300 shadow-emerald-950/60'
+              : 'bg-gradient-to-r from-[#8A0EDF] via-[#9e1beb] to-[#c54bff] border-purple-200 text-white shadow-purple-950/80 hover:brightness-110 ring-2 ring-purple-500/40'
+          }`}
+          title="Open VIP Ad-Free Subscription"
+        >
+          <Crown className="w-4 h-4 text-[#FFD700] fill-current shrink-0" />
+          <span className="text-xs font-black tracking-wide">
+            {isSubscribed ? 'VIP Active' : 'VIP 👑'}
+          </span>
+        </button>
+      )}
+
+      {/* Sticky Bottom Start.io Banner Ad (Hidden when video is playing in fullscreen or in Subscription section or user is VIP subscribed) */}
+      {startIoConfig.enableBanner && !isSubscribed && !isPlayerFullscreen && !isSubscriptionView && (
         <StartIoBannerAd
           position="bottom"
           appId={startIoConfig.appId}

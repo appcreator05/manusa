@@ -33,6 +33,7 @@ interface MoviePlayPageProps {
   onSelectCategory?: (slug: string, label: string) => void;
   onAdClick?: () => void;
   onFullscreenChange?: (isFullscreen: boolean) => void;
+  isSubscribed?: boolean;
 }
 
 export const MoviePlayPage: React.FC<MoviePlayPageProps> = ({
@@ -42,7 +43,8 @@ export const MoviePlayPage: React.FC<MoviePlayPageProps> = ({
   onSelectRelatedMovie,
   onSelectCategory,
   onAdClick,
-  onFullscreenChange
+  onFullscreenChange,
+  isSubscribed = false
 }) => {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const playerContainerRef = useRef<HTMLDivElement | null>(null);
@@ -670,15 +672,17 @@ export const MoviePlayPage: React.FC<MoviePlayPageProps> = ({
           </div>
         </div>
 
-        {/* Start.io Native Ad Placed Directly Below Player (hidden in fullscreen) */}
+        {/* Start.io Native Ad Placed Directly Below Player (hidden in fullscreen & blocked if user has VIP subscription) */}
+        {!isFullscreen && !isSubscribed && (
+          <StartIoNativeAd
+            variant="player-inline"
+            adIndex={1}
+            onAdClick={onAdClick}
+          />
+        )}
+
         {!isFullscreen && (
           <>
-            <StartIoNativeAd
-              variant="player-inline"
-              adIndex={1}
-              onAdClick={onAdClick}
-            />
-
             {/* Movie Title & Essential Details */}
             <div className="mt-4 bg-[#111724] border border-gray-800/90 rounded-2xl p-4 sm:p-6 shadow-xl">
               <div className="flex flex-col sm:flex-row items-start justify-between gap-4">

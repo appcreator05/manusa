@@ -1,5 +1,119 @@
 import BUNDLED_CATALOG from './data/userCatalog8468988.json';
 import CURATED_CLOUD_CATALOG from './data/curatedCloudCatalog.json';
+import {
+    subscriptionDb,
+    sanitizeSubscriptionId,
+    checkAndHandleSubscriptionExpiry,
+    getCachedIsSubscribed,
+    SUBSCRIPTION_PLANS,
+    loginOrRegisterSubscriptionUser,
+    paySubscriptionFromWallet,
+    logoutSubscriptionUser
+} from './services/subscriptionService';
+import { ref, get } from 'firebase/database';
+
+// ==========================================
+// VIP SUBSCRIPTION & 100% AD-FREE ENGINE
+// ==========================================
+let isInSubscriptionView = false;
+let homeCachedHTML = "";
+let adRefreshTimer = null;
+let isSmartlinkInterstitialActive = false;
+let isPopunderActive = false;
+window.__isVipSubscribed = getCachedIsSubscribed();
+
+async function refreshSubscriptionState() {
+    const safeId = localStorage.getItem('sub_wallet_safe_id');
+    if (safeId) {
+        try {
+            const res = await checkAndHandleSubscriptionExpiry(safeId);
+            window.__isVipSubscribed = res.isSubscribed;
+        } catch (e) {
+            window.__isVipSubscribed = getCachedIsSubscribed();
+        }
+    } else {
+        window.__isVipSubscribed = getCachedIsSubscribed();
+    }
+    updateVipAdSuppression();
+}
+setInterval(refreshSubscriptionState, 15000);
+setTimeout(refreshSubscriptionState, 500);
+window.addEventListener('DOMContentLoaded', updateVipAdSuppression);
+updateVipAdSuppression();
+
+function updateVipAdSuppression() {
+    const isVip = !!window.__isVipSubscribed;
+
+    if (isVip) {
+        if (document.body) document.body.classList.add('vip-active');
+        if (document.documentElement) document.documentElement.classList.add('vip-active');
+
+        // Immediately remove and purge all ad elements from the DOM
+        if (typeof document !== 'undefined') {
+            const adElements = document.querySelectorAll('.ad-slot-300x250, .ad-label, #fixedFooterAdContainer, #playerUnderAdSlot, .interstitial-modal, #smartlinkInterstitialModal, #popunderInterstitialModal');
+            adElements.forEach(el => {
+                try {
+                    if (el.id === 'fixedFooterAdContainer') {
+                        el.style.display = 'none';
+                        const inner = document.getElementById('fixedFooterAdInner');
+                        if (inner) inner.innerHTML = '';
+                    } else if (el.id === 'playerUnderAdSlot') {
+                        el.innerHTML = '';
+                        const parent = el.closest('.ad-slot-300x250');
+                        if (parent) parent.remove();
+                    } else {
+                        el.remove();
+                    }
+                } catch (e) {
+                    el.style.display = 'none';
+                }
+            });
+        }
+
+        // Invalidate cached home HTML so non-VIP cached ads can never be re-injected
+        homeCachedHTML = "";
+
+        // Cancel ad refresh timer
+        if (adRefreshTimer) {
+            clearTimeout(adRefreshTimer);
+            adRefreshTimer = null;
+        }
+
+        // Close any active interstitial
+        if (typeof closeSmartlinkInterstitial === 'function' && isSmartlinkInterstitialActive) {
+            closeSmartlinkInterstitial();
+        }
+        if (typeof closePopunderInterstitial === 'function' && isPopunderActive) {
+            closePopunderInterstitial();
+        }
+    } else {
+        if (document.body) document.body.classList.remove('vip-active');
+        if (document.documentElement) document.documentElement.classList.remove('vip-active');
+        const footerAd = document.getElementById('fixedFooterAdContainer');
+        if (footerAd) {
+            footerAd.style.display = 'flex';
+        }
+    }
+
+    // Update VIP menu item in dropdown
+    const vipItem = document.getElementById('vipMenuItem');
+    const vipText = document.getElementById('vipMenuText');
+    const vipBadge = document.getElementById('vipMenuBadge');
+    if (vipItem && vipText && vipBadge) {
+        if (isVip) {
+            vipItem.classList.add('active');
+            vipText.innerHTML = '<i class="fa-solid fa-shield-halved" style="color: #34d399; margin-right: 8px;"></i> VIP Subscription Active';
+            vipBadge.textContent = 'ACTIVE';
+            vipBadge.className = 'vip-badge-pill active';
+        } else {
+            vipItem.classList.remove('active');
+            vipText.innerHTML = '<i class="fa-solid fa-crown" style="color: #FFD700; margin-right: 8px;"></i> VIP Subscription (No Ads)';
+            vipBadge.textContent = 'VIP';
+            vipBadge.className = 'vip-badge-pill';
+        }
+    }
+}
+window.updateVipAdSuppression = updateVipAdSuppression;
 
 // ==========================================
 // CHROME APP OPENER (SMARTLINK & ADS)
@@ -222,7 +336,6 @@ let isInCloudStreamView = false;
 let currentPlayingMovie = null;
 let currentCategoryName = "all";
 let savedScrollPosition = 0;
-let homeCachedHTML = "";
 
 // Show Toast Notification
 function showToast(msg) {
@@ -1199,6 +1312,14 @@ function getAd300x250Observer() {
 }
 
 function renderAd300x250Iframe(container) {
+    if (window.__isVipSubscribed) {
+        if (container) {
+            container.innerHTML = '';
+            const parent = container.closest('.ad-slot-300x250');
+            if (parent) parent.remove();
+        }
+        return;
+    }
     if (!container || container.dataset.loaded === 'true') return;
     container.dataset.loaded = 'true';
 
@@ -1289,6 +1410,13 @@ function renderAd300x250Iframe(container) {
 }
 
 function createAd300x250Element(lazy = true) {
+    if (window.__isVipSubscribed) {
+        const dummy = document.createElement('div');
+        dummy.className = 'ad-slot-300x250 vip-suppressed';
+        dummy.style.display = 'none';
+        return dummy;
+    }
+
     const wrapper = document.createElement('div');
     wrapper.className = 'ad-slot-300x250';
     wrapper.innerHTML = `
@@ -1307,6 +1435,7 @@ function createAd300x250Element(lazy = true) {
 }
 
 function rebindUnloadedAds() {
+    if (window.__isVipSubscribed) return;
     if (!window.IntersectionObserver) return;
     const observer = getAd300x250Observer();
     const unloadedSlots = document.querySelectorAll('.ad-slot-300x250-inner:not([data-loaded="true"])');
@@ -1493,11 +1622,13 @@ function renderPlayerSection(movie, activeServerIndex = 0) {
                 </div>
             </div>
 
-            <!-- 300x250 Ad Unit Under Player -->
+            <!-- 300x250 Ad Unit Under Player (Non-VIP Only) -->
+            ${!window.__isVipSubscribed ? `
             <div class="ad-slot-300x250" style="margin: 18px auto 12px auto;">
                 <span class="ad-label">Advertisement</span>
                 <div class="ad-slot-300x250-inner" id="playerUnderAdSlot"></div>
             </div>
+            ` : ''}
 
             <!-- Related Movies Carousel -->
             ${relatedMovies.length > 0 ? `
@@ -1522,9 +1653,9 @@ function renderPlayerSection(movie, activeServerIndex = 0) {
         }
     }
 
-    // Load ad under player
+    // Load ad under player (Non-VIP only)
     const playerUnderAdSlot = document.getElementById('playerUnderAdSlot');
-    if (playerUnderAdSlot) {
+    if (!window.__isVipSubscribed && playerUnderAdSlot) {
         renderAd300x250Iframe(playerUnderAdSlot);
     }
 
@@ -1653,13 +1784,14 @@ window.exitPlayerView = function() {
     if (isInCloudStreamView) {
         window.openCloudStreamSection();
     } else if (isInCategoryView && currentCategoryName !== 'all') {
-        window.filterAndDisplay(currentCategoryName);
+        window.filterAndDisplay(currentCategoryName, true);
     } else {
         const container = document.getElementById('mainContainer');
-        if (homeCachedHTML && container) {
+        if (!window.__isVipSubscribed && homeCachedHTML && container) {
             container.innerHTML = homeCachedHTML;
             rebindHomeCardClicks();
         } else {
+            homeCachedHTML = "";
             renderContent(allMovies);
         }
     }
@@ -1757,13 +1889,16 @@ async function renderContent(movies) {
         if (catMovies.length === 0) continue;
         renderedCatCount++;
 
+        // Display up to 8 movies per category on the home page
+        const displayMovies = catMovies.slice(0, 8);
+
         const sectionDiv = document.createElement('div');
         sectionDiv.style.marginBottom = "-25px";
         sectionDiv.innerHTML = `
             <div class="section-header">
                 <div class="section-title-wrapper">
                     <div class="section-bar"></div>
-                    <div class="section-title">${cat}</div>
+                    <div class="section-title">${cat} (${catMovies.length})</div>
                 </div>
                 <button class="show-all-btn" onclick="showAllCategory('${cat.replace(/'/g, "\\'")}')">Show All</button>
             </div>
@@ -1773,7 +1908,7 @@ async function renderContent(movies) {
         container.appendChild(sectionDiv);
         const rowContainer = sectionDiv.querySelector('.horizontal-scroll-container');
         
-        for (const m of catMovies) {
+        for (const m of displayMovies) {
             const card = document.createElement('div');
             card.className = 'movie-card';
             const globalIndex = allMovies.indexOf(m);
@@ -1802,8 +1937,8 @@ async function renderContent(movies) {
             }
         }
 
-        // Show 300x250 ad unit after every 3 categories
-        if (renderedCatCount % 3 === 0) {
+        // Show 300x250 ad unit after every 3 categories (Non-VIP only)
+        if (!window.__isVipSubscribed && renderedCatCount % 3 === 0) {
             const adSlot = createAd300x250Element(true);
             container.appendChild(adSlot);
         }
@@ -1819,13 +1954,26 @@ window.showAllCategory = async function(categoryName) {
     isInCategoryView = true;
     isPlayerView = false;
     updateHeaderButton(); 
-    await filterAndDisplay(categoryName);
+    await filterAndDisplay(categoryName, true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 window.handleMenuOrBack = function() {
     if (isPlayerView) {
         exitPlayerView();
+    } else if (isInSubscriptionView) {
+        isInSubscriptionView = false;
+        const searchInput = document.getElementById('searchInput');
+        const clearBtn = document.getElementById('searchClearBtn');
+        if (searchInput) {
+            searchInput.value = '';
+            searchInput.placeholder = 'Enter Movie Name or Cast...';
+        }
+        if (clearBtn) clearBtn.style.display = 'none';
+        updateHeaderButton();
+        homeCachedHTML = "";
+        updateVipAdSuppression();
+        renderContent(allMovies);
     } else if (isInCloudStreamView) {
         isInCloudStreamView = false;
         const searchInput = document.getElementById('searchInput');
@@ -1854,6 +2002,7 @@ window.handleMenuOrBack = function() {
 };
 
 window.goHome = function() {
+    isInSubscriptionView = false;
     isInCloudStreamView = false;
     isInCategoryView = false;
     isPlayerView = false;
@@ -1881,7 +2030,11 @@ window.clearTopSearch = function() {
     }
     if (clearBtn) clearBtn.style.display = 'none';
 
-    if (isInCloudStreamView) {
+    if (isInSubscriptionView) {
+        isInSubscriptionView = false;
+        updateHeaderButton();
+        renderContent(allMovies);
+    } else if (isInCloudStreamView) {
         renderCloudCategoryFilter(currentCloudCategory);
     } else {
         isInCategoryView = false;
@@ -1897,7 +2050,7 @@ function updateHeaderButton() {
 
     if (!menuToggle || !menuIcon || !menuBtnText) return;
 
-    if (isPlayerView || isInCategoryView || isInCloudStreamView) {
+    if (isPlayerView || isInCategoryView || isInCloudStreamView || isInSubscriptionView) {
         menuIcon.className = "fa-solid fa-arrow-left";
         menuBtnText.innerText = "Back";
         menuToggle.style.background = "#ff4757";
@@ -1975,23 +2128,28 @@ window.handleSearchInput = async function() {
     }
 };
 
-window.filterAndDisplay = async function(term) {
+window.filterAndDisplay = async function(term, isExactCategory = false) {
     const container = document.getElementById('mainContainer');
     if (!container) return;
     const lowerTerm = term.toLowerCase();
 
-    const filtered = allMovies.filter(m => 
-        (m.title && m.title.toLowerCase().includes(lowerTerm)) || 
-        (m.name && m.name.toLowerCase().includes(lowerTerm)) ||
-        (m.category && m.category.toLowerCase().includes(lowerTerm)) ||
-        (m.cast && (typeof m.cast === 'string' ? m.cast.toLowerCase().includes(lowerTerm) : Array.isArray(m.cast) && m.cast.join(' ').toLowerCase().includes(lowerTerm)))
-    );
+    const filtered = allMovies.filter(m => {
+        if (isExactCategory) {
+            return m.category && m.category.toLowerCase() === lowerTerm;
+        }
+        return (m.title && m.title.toLowerCase().includes(lowerTerm)) || 
+            (m.name && m.name.toLowerCase().includes(lowerTerm)) ||
+            (m.category && m.category.toLowerCase().includes(lowerTerm)) ||
+            (m.cast && (typeof m.cast === 'string' ? m.cast.toLowerCase().includes(lowerTerm) : Array.isArray(m.cast) && m.cast.join(' ').toLowerCase().includes(lowerTerm)));
+    });
+
+    const displayTitle = isExactCategory ? `${term} (${filtered.length})` : `Results for "${term}" (${filtered.length})`;
 
     container.innerHTML = `
         <div class="section-header">
             <div class="section-title-wrapper">
                 <div class="section-bar"></div>
-                <div class="section-title">Results for "${term}" (${filtered.length})</div>
+                <div class="section-title">${displayTitle}</div>
             </div>
         </div>
         <div class="gallery-grid" id="searchResultGrid"></div>
@@ -2021,8 +2179,8 @@ window.filterAndDisplay = async function(term) {
         `;
         grid.appendChild(card);
 
-        // Show 300x250 ad after every 36 posts; lazy loads when user scrolls near it
-        if (postCount % 36 === 0) {
+        // Show 300x250 ad after every 36 posts; lazy loads when user scrolls near it (Non-VIP only)
+        if (!window.__isVipSubscribed && postCount % 36 === 0) {
             const adSlot = createAd300x250Element(true);
             adSlot.classList.add('ad-slot-grid-span');
             grid.appendChild(adSlot);
@@ -2139,8 +2297,8 @@ window.displayMoviesByCast = async function(actorName) {
         `;
         grid.appendChild(card);
 
-        // Show 300x250 ad after every 36 posts
-        if (postCount % 36 === 0) {
+        // Show 300x250 ad after every 36 posts (Non-VIP only)
+        if (!window.__isVipSubscribed && postCount % 36 === 0) {
             const adSlot = createAd300x250Element(true);
             adSlot.classList.add('ad-slot-grid-span');
             grid.appendChild(adSlot);
@@ -2233,11 +2391,18 @@ window.addEventListener('popstate', () => {
 // ==========================================
 // FIXED FOOTER BANNER AD (320x50 with 45-55s Auto-refresh)
 // ==========================================
-let adRefreshTimer = null;
 
 function loadFooterBannerAd() {
     const container = document.getElementById('fixedFooterAdInner');
     if (!container) return;
+    const outer = document.getElementById('fixedFooterAdContainer');
+
+    if (window.__isVipSubscribed) {
+        if (outer) outer.style.display = 'none';
+        container.innerHTML = '';
+        return;
+    }
+    if (outer) outer.style.display = 'flex';
 
     // Clear previous ad iframe to guarantee fresh impression and script load
     container.innerHTML = '';
@@ -2333,7 +2498,9 @@ function loadFooterBannerAd() {
 function scheduleFooterAdRefresh() {
     if (adRefreshTimer) {
         clearTimeout(adRefreshTimer);
+        adRefreshTimer = null;
     }
+    if (window.__isVipSubscribed) return;
     // Random interval between 45 and 55 seconds
     const minSec = 45;
     const maxSec = 55;
@@ -2346,6 +2513,7 @@ function scheduleFooterAdRefresh() {
 }
 
 function initFooterBannerAd() {
+    if (window.__isVipSubscribed) return;
     loadFooterBannerAd();
     scheduleFooterAdRefresh();
 }
@@ -2356,7 +2524,6 @@ function initFooterBannerAd() {
 const SMARTLINK_URL = "https://www.profitableratecpmnetwork.com/yjtnajfd?key=cc49d62c781de224c118e83dc6c2ea8f";
 const INTERSTITIAL_INTERVAL_MS = 15 * 60 * 1000; // 15 minutes
 
-let isSmartlinkInterstitialActive = false;
 let interstitialCountdownInterval = null;
 let wasPlayingBeforeInterstitial = false;
 let lastInterstitialTime = parseInt(localStorage.getItem('vdosky_last_interstitial') || '0', 10);
@@ -2370,6 +2537,7 @@ let wasFullscreenBeforeInterstitial = false;
 let wasForcedLandscape = false;
 
 function showSmartlinkInterstitial() {
+    if (window.__isVipSubscribed) return;
     if (isSmartlinkInterstitialActive) return;
     isSmartlinkInterstitialActive = true;
     lastInterstitialTime = Date.now();
@@ -2577,7 +2745,6 @@ const POPUNDER_SCRIPT_URL = "https://pl29511424.profitableratecpmnetwork.com/b8/
 const POPUNDER_TARGET_URL = SMARTLINK_URL;
 const POPUNDER_COOLDOWN_MS = 5 * 60 * 1000; // 5 minutes
 
-let isPopunderActive = false;
 let popunderCountdownInterval = null;
 let lastPopunderTime = parseInt(localStorage.getItem('vdosky_last_popunder') || '0', 10);
 
@@ -2614,6 +2781,7 @@ function openPopunderInChrome() {
 window.openPopunderInChrome = openPopunderInChrome;
 
 function showPopunderInterstitial() {
+    if (window.__isVipSubscribed) return;
     if (isPopunderActive || isSmartlinkInterstitialActive) return;
     
     // Check cooldown again strictly
@@ -2804,6 +2972,7 @@ window.closePopunderInterstitial = closePopunderInterstitial;
 
 // Global Click Trigger for Popunder (Every 5 minutes on user click anywhere in the app)
 function handleGlobalClickForPopunder(e) {
+    if (window.__isVipSubscribed) return;
     // If an ad modal is already visible, do nothing
     if (isPopunderActive || isSmartlinkInterstitialActive) return;
 
@@ -2832,6 +3001,7 @@ document.addEventListener('touchend', handleGlobalClickForPopunder, { passive: t
 
 // Check timer every 5 seconds to trigger every 15 minutes reliably
 setInterval(() => {
+    if (window.__isVipSubscribed) return;
     const elapsed = Date.now() - lastInterstitialTime;
     if (elapsed >= INTERSTITIAL_INTERVAL_MS) {
         showSmartlinkInterstitial();
@@ -3088,8 +3258,8 @@ function renderCloudVideos(videos) {
         `;
         grid.appendChild(card);
 
-        // Insert native 300x250 ad unit after every 18 video cards
-        if (count % 18 === 0) {
+        // Insert native 300x250 ad unit after every 18 video cards (Non-VIP only)
+        if (!window.__isVipSubscribed && count % 18 === 0) {
             const adSlot = createAd300x250Element(true);
             adSlot.classList.add('ad-slot-grid-span');
             grid.appendChild(adSlot);
@@ -3113,3 +3283,558 @@ function playCloudStreamVideo(video) {
 window.playCloudStreamVideo = playCloudStreamVideo;
 
 fetchMovies();
+
+// ==========================================
+// VIP SUBSCRIPTION CONTROLLER & UI
+// ==========================================
+function subToast(msg) {
+    let t = document.getElementById('subToastPill');
+    if (!t) {
+        t = document.createElement('div');
+        t.id = 'subToastPill';
+        t.style.position = 'fixed';
+        t.style.bottom = '80px';
+        t.style.left = '50%';
+        t.style.transform = 'translateX(-50%)';
+        t.style.background = 'linear-gradient(135deg, #1e1e2f, #2d2d44)';
+        t.style.color = '#ffffff';
+        t.style.padding = '12px 20px';
+        t.style.borderRadius = '25px';
+        t.style.boxShadow = '0 10px 25px rgba(0,0,0,0.6), 0 0 15px rgba(197, 75, 255, 0.4)';
+        t.style.border = '1px solid #c54bff';
+        t.style.zIndex = '999999';
+        t.style.fontSize = '13px';
+        t.style.fontWeight = '600';
+        t.style.pointerEvents = 'none';
+        t.style.transition = 'all 0.3s ease';
+        t.style.textAlign = 'center';
+        t.style.maxWidth = '90%';
+        document.body.appendChild(t);
+    }
+    t.innerText = msg;
+    t.style.opacity = '1';
+    clearTimeout(t._timeout);
+    t._timeout = setTimeout(() => {
+        t.style.opacity = '0';
+    }, 3500);
+}
+
+window.openSubscriptionSection = function() {
+    isInSubscriptionView = true;
+    isInCloudStreamView = false;
+    isPlayerView = false;
+    isInCategoryView = false;
+    updateHeaderButton();
+
+    const dropdown = document.getElementById("dropdownMenu");
+    if (dropdown && dropdown.classList.contains("active")) {
+        dropdown.classList.remove("active");
+    }
+
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('searchClearBtn');
+    if (searchInput) {
+        searchInput.value = '';
+        searchInput.placeholder = 'VIP Subscription & Wallet...';
+    }
+    if (clearBtn) clearBtn.style.display = 'none';
+
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    renderSubscriptionPage();
+};
+
+async function renderSubscriptionPage() {
+    const container = document.getElementById('mainContainer');
+    if (!container) return;
+
+    const safeId = localStorage.getItem('sub_wallet_safe_id');
+    const rawId = localStorage.getItem('sub_wallet_user');
+
+    let userData = null;
+    let isSub = false;
+    let daysRemaining = 0;
+    let expiresAtFormatted = '';
+
+    if (safeId) {
+        try {
+            const statusCheck = await checkAndHandleSubscriptionExpiry(safeId);
+            isSub = statusCheck.isSubscribed;
+            window.__isVipSubscribed = isSub;
+            daysRemaining = statusCheck.daysRemaining;
+            if (statusCheck.expiryDate) {
+                expiresAtFormatted = statusCheck.expiryDate.toLocaleDateString() + ' ' + statusCheck.expiryDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            }
+            const snap = await get(ref(subscriptionDb, 'users/' + safeId));
+            if (snap.exists()) {
+                userData = snap.val();
+            }
+        } catch (e) {
+            console.error('Error fetching subscription user:', e);
+        }
+    }
+
+    const balance = userData ? (Number(userData.balance) || 0) : 0;
+
+    let userCardHtml = '';
+    if (safeId && userData) {
+        userCardHtml = `
+            <div class="sub-wallet-card">
+                <div class="sub-wallet-row">
+                    <div>
+                        <div style="font-size: 11px; color: #8b949e; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">User Account</div>
+                        <div style="font-size: 16px; font-weight: 800; color: #ffffff; display: flex; align-items: center; gap: 6px; margin-top: 4px;">
+                            <i class="fa-solid fa-circle-user" style="color: #00d2ff;"></i> ${userData.identifier || rawId}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <div style="font-size: 11px; color: #8b949e; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Wallet Balance</div>
+                        <div class="sub-wallet-balance-num">₹${balance.toFixed(2)}</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 14px; padding-top: 12px; border-top: 1px solid #2d2d44; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <div style="font-size: 11px; color: #8b949e; font-weight: 700;">VIP STATUS</div>
+                        <div style="font-size: 14px; font-weight: 800; margin-top: 2px;">
+                            ${isSub 
+                                ? `<span style="color: #10b981;"><i class="fa-solid fa-circle-check"></i> VIP Active (${daysRemaining} days left)</span>` 
+                                : `<span style="color: #ef4444;"><i class="fa-solid fa-circle-xmark"></i> Inactive (Free Plan)</span>`}
+                        </div>
+                        ${isSub && expiresAtFormatted ? `<div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">Expires: ${expiresAtFormatted}</div>` : ''}
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="window.renderSubscriptionPage();" style="background: #25283b; color: #00d2ff; border: 1px solid #3d3d5c; padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                        </button>
+                        <button onclick="window.handleSubLogout();" style="background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    } else {
+        userCardHtml = `
+            <div class="sub-wallet-card" style="border-color: #8A0EDF; box-shadow: 0 8px 25px rgba(138, 14, 223, 0.2);">
+                <div style="font-size: 16px; font-weight: 800; color: #ffffff; margin-bottom: 6px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-wallet" style="color: #c54bff;"></i> Wallet Login
+                </div>
+                <div style="font-size: 12px; color: #9ca3af; margin-bottom: 14px; line-height: 1.4;">
+                    Select your login method, enter your registered Mobile Number or Gmail and Password/PIN. If you do not have an account, click Login to register.
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #a0aec0; margin-bottom: 5px;">Login Method:</label>
+                    <select id="subLoginTypeSelect" class="sub-select-box" onchange="window.handleSubLoginTypeChange(this.value)">
+                        <option value="mobile">📱 Mobile Number</option>
+                        <option value="gmail">✉️ Gmail / Email</option>
+                    </select>
+
+                    <div id="subIdentifierWrapper">
+                        <label id="subIdentifierLabel" style="display: block; font-size: 12px; font-weight: 700; color: #a0aec0; margin-bottom: 5px;">Mobile Number:</label>
+                        <input type="tel" id="subIdentifierInput" class="sub-input-box" placeholder="Enter 10-digit Mobile Number (e.g. 9804163298)" autocomplete="tel">
+                    </div>
+
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #a0aec0; margin-bottom: 5px;">Password / PIN:</label>
+                    <input type="password" id="subPinInput" class="sub-input-box" placeholder="Enter Password or PIN" autocomplete="current-password">
+
+                    <button id="subLoginBtn" onclick="window.handleSubLoginSubmit()" class="sub-plan-btn" style="padding: 12px 0; font-size: 14px; width: 100%; margin-top: 4px;">
+                        <i class="fa-solid fa-right-to-bracket" style="margin-right: 6px;"></i> Login to Wallet
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Plans list
+    let plansHtml = '';
+    SUBSCRIPTION_PLANS.forEach((plan, index) => {
+        const isFeatured = plan.days === 30;
+        plansHtml += `
+            <div class="sub-plan-card ${isFeatured ? 'featured' : ''}">
+                ${isFeatured ? '<div class="sub-plan-badge">MOST POPULAR</div>' : ''}
+                <div class="sub-plan-days"><i class="fa-solid fa-calendar-days" style="color:#c54bff; margin-right:4px;"></i> ${plan.days} Days</div>
+                <div class="sub-plan-price">₹${plan.price}</div>
+                <div style="font-size: 11px; color: #10b981; font-weight: 700; margin-bottom: 12px;">
+                    <i class="fa-solid fa-shield-halved"></i> 100% Ad-Free (No Ads)
+                </div>
+                <button class="sub-plan-btn" onclick="window.handleSubPlanClick(${index})">
+                    Pay ₹${plan.price} from Wallet
+                </button>
+            </div>
+        `;
+    });
+
+    container.innerHTML = `
+        <div class="sub-wrapper">
+            <!-- Hero Header -->
+            <div class="sub-hero-card">
+                <div class="sub-hero-icon"><i class="fa-solid fa-crown"></i></div>
+                <div class="sub-hero-title">VDOSKy VIP Ad-Free Zone</div>
+                <div class="sub-hero-subtitle">
+                    Enjoy unlimited movies and series completely ad-free. Recharge your wallet and activate your VIP subscription with 1-click.
+                </div>
+            </div>
+
+            <!-- User / Wallet Box -->
+            ${userCardHtml}
+
+            <!-- Subscription Plans Header -->
+            <div style="margin-top: 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="font-size: 15px; font-weight: 800; color: #ffffff;">
+                    <i class="fa-solid fa-tags" style="color: #FFD700; margin-right: 6px;"></i> VIP Subscription Plans
+                </div>
+                <div style="font-size: 12px; color: #00d2ff; font-weight: 600;">Instant Activation</div>
+            </div>
+
+            <!-- 4 Plans Grid -->
+            <div class="sub-plans-grid">
+                ${plansHtml}
+            </div>
+
+            <!-- Wallet Recharge Instructions -->
+            <div class="sub-wallet-card" style="border: 1px dashed #3d3d5c; margin-top: 16px;">
+                <div style="font-size: 14px; font-weight: 800; color: #00d2ff; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-circle-info"></i> How to Recharge Wallet?
+                </div>
+                <div style="font-size: 12px; color: #8b949e; line-height: 1.6;">
+                    1. Register your account using your Mobile Number or Gmail.<br>
+                    2. Contact the administrator to deposit balance into your wallet.<br>
+                    3. Once your balance appears, click on any VIP plan above for instant activation.
+                </div>
+            </div>
+        </div>
+    `;
+}
+window.renderSubscriptionPage = renderSubscriptionPage;
+
+window.handleSubLoginTypeChange = function(type) {
+    const label = document.getElementById('subIdentifierLabel');
+    const input = document.getElementById('subIdentifierInput');
+    if (!label || !input) return;
+
+    if (type === 'gmail') {
+        label.innerText = 'Gmail / Email Address:';
+        input.type = 'email';
+        input.placeholder = 'Enter Gmail Address (e.g. yourname@gmail.com)';
+        input.autocomplete = 'email';
+    } else {
+        label.innerText = 'Mobile Number:';
+        input.type = 'tel';
+        input.placeholder = 'Enter 10-digit Mobile Number (e.g. 9804163298)';
+        input.autocomplete = 'tel';
+    }
+    input.focus();
+};
+
+window.handleSubLoginSubmit = async function() {
+    const typeSelect = document.getElementById('subLoginTypeSelect');
+    const idInput = document.getElementById('subIdentifierInput');
+    const pinInput = document.getElementById('subPinInput');
+    if (!idInput || !pinInput) return;
+
+    const loginType = typeSelect ? typeSelect.value : 'mobile';
+    const rawId = idInput.value.trim();
+    const pin = pinInput.value.trim();
+
+    if (loginType === 'gmail') {
+        if (!rawId || !rawId.includes('@') || rawId.length < 5) {
+            subToast('Please enter a valid Gmail address (e.g. user@gmail.com)');
+            idInput.focus();
+            return;
+        }
+    } else {
+        if (!rawId || rawId.length < 6) {
+            subToast('Please enter a valid Mobile Number');
+            idInput.focus();
+            return;
+        }
+    }
+
+    if (!pin || pin.length < 3) {
+        subToast('Please enter your Password or PIN');
+        pinInput.focus();
+        return;
+    }
+
+    const btn = document.getElementById('subLoginBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Verifying...';
+    }
+
+    try {
+        const res = await loginOrRegisterSubscriptionUser(rawId, pin);
+        if (res.success) {
+            subToast('✅ Login successful!');
+            await refreshSubscriptionState();
+            renderSubscriptionPage();
+        } else if (res.notRegistered) {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket" style="margin-right: 6px;"></i> Login to Wallet';
+            }
+            window.showNotRegisteredModal(rawId);
+        } else {
+            subToast('❌ ' + (res.error || 'Login failed'));
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-right-to-bracket" style="margin-right: 6px;"></i> Login to Wallet';
+            }
+        }
+    } catch (err) {
+        subToast('Login error: ' + (err.message || err));
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-right-to-bracket" style="margin-right: 6px;"></i> Login to Wallet';
+        }
+    }
+};
+
+window.showNotRegisteredModal = function(identifier) {
+    let modal = document.getElementById('notRegisteredCustomModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'notRegisteredCustomModal';
+        modal.className = 'custom-sub-modal-backdrop';
+        document.body.appendChild(modal);
+    }
+
+    const safeDisplayId = String(identifier || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    modal.innerHTML = `
+        <div class="custom-sub-modal-card">
+            <button class="custom-sub-modal-close" onclick="window.closeNotRegisteredModal()" title="Close">&times;</button>
+            <div class="custom-sub-modal-icon">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="custom-sub-modal-title">Account Not Registered!</div>
+            <div class="custom-sub-modal-subtitle">No Wallet Account Found</div>
+            <div class="custom-sub-modal-body">
+                No registered wallet account was found for <strong>"${safeDisplayId}"</strong>. To recharge balance and activate your VIP subscription, please register your account.
+            </div>
+            <div class="custom-sub-modal-actions">
+                <button class="custom-sub-modal-register-btn" onclick="window.handleGoToRegister()">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Go to Register
+                </button>
+                <button class="custom-sub-modal-cancel-btn" onclick="window.closeNotRegisteredModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+};
+
+window.closeNotRegisteredModal = function() {
+    const modal = document.getElementById('notRegisteredCustomModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+};
+
+window.handleGoToRegister = function() {
+    window.closeNotRegisteredModal();
+    const registerUrl = 'https://appcreator05.blogspot.com/p/add-wallet-apk-creator-app.html';
+    if (typeof window.openInChrome === 'function') {
+        window.openInChrome(registerUrl);
+    } else {
+        window.open(registerUrl, '_blank');
+    }
+};
+
+window.handleSubLogout = function() {
+    logoutSubscriptionUser();
+    window.__isVipSubscribed = false;
+    updateVipAdSuppression();
+    subToast('Logged out successfully');
+    renderSubscriptionPage();
+};
+
+window.handleSubPlanClick = async function(planIndex) {
+    const plan = SUBSCRIPTION_PLANS[planIndex];
+    if (!plan) return;
+
+    const safeId = localStorage.getItem('sub_wallet_safe_id');
+    if (!safeId) {
+        subToast('⚠️ Please login with your Mobile Number or Gmail first.');
+        window.scrollTo({ top: 120, behavior: 'smooth' });
+        const input = document.getElementById('subIdentifierInput');
+        if (input) input.focus();
+        return;
+    }
+
+    // Fetch latest balance from Firebase
+    let currentBalance = 0;
+    try {
+        const snap = await get(ref(subscriptionDb, 'users/' + safeId));
+        if (snap.exists()) {
+            const data = snap.val();
+            currentBalance = Number(data.balance ?? 0);
+        }
+    } catch (e) {
+        console.warn('Could not fetch latest balance before modal:', e);
+    }
+
+    window.showSubPaymentConfirmModal(planIndex, currentBalance);
+};
+
+window.showSubPaymentConfirmModal = function(planIndex, balance) {
+    const plan = SUBSCRIPTION_PLANS[planIndex];
+    if (!plan) return;
+
+    let modal = document.getElementById('subPaymentConfirmModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'subPaymentConfirmModal';
+        modal.className = 'custom-sub-modal-backdrop';
+        document.body.appendChild(modal);
+    }
+
+    const currentBalance = Number(balance || 0);
+    const hasEnough = currentBalance >= plan.price;
+    const remainingBalance = currentBalance - plan.price;
+
+    modal.innerHTML = `
+        <div class="custom-sub-modal-card">
+            <button class="custom-sub-modal-close" onclick="window.closeSubPaymentConfirmModal()" title="Close">&times;</button>
+            <div class="custom-sub-modal-icon" style="color: #FFD700; background: rgba(255, 215, 0, 0.15); border-color: #FFD700;">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <div class="custom-sub-modal-title">Confirm VIP Subscription</div>
+            <div class="custom-sub-modal-subtitle">${plan.days} Days Plan — 100% Ad-Free</div>
+            
+            <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid #2d2d44; border-radius: 12px; padding: 14px 16px; margin: 16px 0; text-align: left; font-size: 13px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #9ca3af;">Current Wallet Balance:</span>
+                    <strong style="color: #00d2ff;">₹${currentBalance.toFixed(2)}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #9ca3af;">Plan Price:</span>
+                    <strong style="color: #ef4444;">- ₹${plan.price.toFixed(2)}</strong>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid #2d2d44; padding-top: 8px; margin-top: 4px;">
+                    <span style="color: #9ca3af;">Remaining Balance:</span>
+                    <strong style="color: ${hasEnough ? '#10b981' : '#ef4444'};">₹${remainingBalance.toFixed(2)}</strong>
+                </div>
+            </div>
+
+            ${!hasEnough ? `
+                <div style="color: #ef4444; font-size: 12px; margin-bottom: 14px; font-weight: 700; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.25);">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Insufficient balance! You need ₹${(plan.price - currentBalance).toFixed(2)} more. Please add funds to your wallet.
+                </div>
+                <div class="custom-sub-modal-actions">
+                    <button class="custom-sub-modal-register-btn" onclick="window.handleGoToRegister()">
+                        <i class="fa-solid fa-wallet"></i> Recharge Wallet
+                    </button>
+                    <button class="custom-sub-modal-cancel-btn" onclick="window.closeSubPaymentConfirmModal()">
+                        Cancel
+                    </button>
+                </div>
+            ` : `
+                <div id="subPaymentErrorBox" style="display: none; color: #ef4444; font-size: 12px; margin-bottom: 12px; font-weight: 700;"></div>
+                <div class="custom-sub-modal-actions">
+                    <button id="confirmPayActionBtn" class="custom-sub-modal-register-btn" style="background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);" onclick="window.executeSubPayment(${planIndex})">
+                        <i class="fa-solid fa-bolt"></i> Pay ₹${plan.price} & Activate VIP
+                    </button>
+                    <button class="custom-sub-modal-cancel-btn" onclick="window.closeSubPaymentConfirmModal()">
+                        Cancel
+                    </button>
+                </div>
+            `}
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+};
+
+window.closeSubPaymentConfirmModal = function() {
+    const modal = document.getElementById('subPaymentConfirmModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+};
+
+window.executeSubPayment = async function(planIndex) {
+    const plan = SUBSCRIPTION_PLANS[planIndex];
+    if (!plan) return;
+
+    const safeId = localStorage.getItem('sub_wallet_safe_id');
+    if (!safeId) return;
+
+    const payBtn = document.getElementById('confirmPayActionBtn');
+    const errBox = document.getElementById('subPaymentErrorBox');
+    if (payBtn) {
+        payBtn.disabled = true;
+        payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing Payment...';
+    }
+    if (errBox) errBox.style.display = 'none';
+
+    try {
+        const res = await paySubscriptionFromWallet(safeId, plan);
+        if (res.success) {
+            window.__isVipSubscribed = true;
+            updateVipAdSuppression();
+            window.closeSubPaymentConfirmModal();
+            window.showSubPaymentSuccessModal(plan);
+            renderSubscriptionPage();
+        } else {
+            if (payBtn) {
+                payBtn.disabled = false;
+                payBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Pay ₹${plan.price} & Activate VIP`;
+            }
+            if (errBox) {
+                errBox.textContent = res.error || 'Payment failed. Please check your balance.';
+                errBox.style.display = 'block';
+            }
+            subToast(res.error || 'Payment failed');
+        }
+    } catch (e) {
+        if (payBtn) {
+            payBtn.disabled = false;
+            payBtn.innerHTML = `<i class="fa-solid fa-bolt"></i> Pay ₹${plan.price} & Activate VIP`;
+        }
+        if (errBox) {
+            errBox.textContent = e.message || 'Payment transaction failed.';
+            errBox.style.display = 'block';
+        }
+        subToast('Payment failed: ' + (e.message || 'Error'));
+    }
+};
+
+window.showSubPaymentSuccessModal = function(plan) {
+    let modal = document.getElementById('subPaymentSuccessModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'subPaymentSuccessModal';
+        modal.className = 'custom-sub-modal-backdrop';
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+        <div class="custom-sub-modal-card" style="border-color: #34d399; box-shadow: 0 16px 36px rgba(0,0,0,0.8), 0 0 30px rgba(16, 185, 129, 0.35);">
+            <div class="custom-sub-modal-icon" style="color: #34d399; background: rgba(16, 185, 129, 0.2); border-color: #34d399;">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="custom-sub-modal-title" style="color: #34d399;">Payment Successful!</div>
+            <div class="custom-sub-modal-subtitle">${plan.days} Days VIP Activated</div>
+            <div class="custom-sub-modal-body">
+                🎉 Congratulations! Your <strong>${plan.days} Days VIP Subscription</strong> is now active. All banner, video, and interstitial ads have been completely removed!
+            </div>
+            <div class="custom-sub-modal-actions">
+                <button class="custom-sub-modal-register-btn" style="background: linear-gradient(135deg, #059669, #10b981);" onclick="window.closeSubPaymentSuccessModal(); goHome();">
+                    <i class="fa-solid fa-play"></i> Start Watching Ad-Free
+                </button>
+            </div>
+        </div>
+    `;
+
+    modal.style.display = 'flex';
+};
+
+window.closeSubPaymentSuccessModal = function() {
+    const modal = document.getElementById('subPaymentSuccessModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+};

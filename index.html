@@ -35,6 +35,7 @@
         window.playNextVideo = window.playNextVideo || function() {};
         window.cancelAutoNext = window.cancelAutoNext || function() {};
         window.replayCurrentVideo = window.replayCurrentVideo || function() {};
+        window.openSubscriptionSection = window.openSubscriptionSection || function() {};
     </script>
     
     <style>
@@ -169,8 +170,7 @@
             display: flex; 
             align-items: center; 
             gap: 10px; 
-            padding: 10px 15px;
-            padding-top: calc(10px + env(safe-area-inset-top, 0px));
+            padding: 8px 12px;
             box-sizing: border-box;
             z-index: 999;
             box-shadow: 0 4px 10px rgba(0,0,0,0.8);
@@ -254,9 +254,9 @@
         }
 
         .dropdown-menu-container {
-            position: absolute;
-            top: 65px;
-            left: 15px;
+            position: fixed;
+            top: 54px;
+            left: 12px;
             width: 280px;
             background-color: #1e1e2f;
             border-radius: 10px;
@@ -1000,6 +1000,40 @@
             font-weight: 600;
         }
 
+        /* VIP AD SUPPRESSION - STRICT ZERO AD DISPLAY FOR SUBSCRIBERS */
+        body.vip-active .ad-slot-300x250,
+        body.vip-active .ad-slot-grid-span,
+        body.vip-active .ad-label,
+        body.vip-active #fixedFooterAdContainer,
+        body.vip-active #playerUnderAdSlot,
+        body.vip-active .interstitial-modal,
+        body.vip-active #smartlinkInterstitialModal,
+        body.vip-active #popunderInterstitialModal,
+        body.vip-active iframe[src*="highrevenueformat"],
+        body.vip-active iframe[src*="profitableratecpmnetwork"],
+        html.vip-active .ad-slot-300x250,
+        html.vip-active .ad-slot-grid-span,
+        html.vip-active .ad-label,
+        html.vip-active #fixedFooterAdContainer,
+        html.vip-active #playerUnderAdSlot,
+        html.vip-active .interstitial-modal,
+        html.vip-active #smartlinkInterstitialModal,
+        html.vip-active #popunderInterstitialModal,
+        html.vip-active iframe[src*="highrevenueformat"],
+        html.vip-active iframe[src*="profitableratecpmnetwork"],
+        .vip-suppressed {
+            display: none !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            min-height: 0 !important;
+            max-height: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            pointer-events: none !important;
+            opacity: 0 !important;
+        }
+
         /* Smartlink Fullscreen Interstitial Ad */
         .interstitial-modal {
             position: fixed !important;
@@ -1477,6 +1511,442 @@
             margin-top: 4px;
             line-height: 1.4;
         }
+
+        /* VIP Subscription & Ad-Free System Styles */
+        .vip-header-btn {
+            background: linear-gradient(135deg, #8A0EDF, #c54bff);
+            color: #ffffff;
+            border: 1px solid #e084ff;
+            padding: 6px 11px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(138, 14, 223, 0.4);
+            margin-left: 6px;
+            margin-right: 2px;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+        .vip-header-btn:hover {
+            filter: brightness(1.15);
+            transform: translateY(-1px);
+        }
+        .vip-header-btn:active {
+            transform: scale(0.95);
+        }
+        .vip-menu-item {
+            background: linear-gradient(90deg, rgba(138, 14, 223, 0.4), rgba(197, 75, 255, 0.25)) !important;
+            border: 1.5px solid #c54bff !important;
+            border-radius: 8px !important;
+            margin-bottom: 8px !important;
+            box-shadow: 0 4px 12px rgba(138, 14, 223, 0.3);
+        }
+        .vip-menu-item a {
+            color: #f3d4ff !important;
+            font-weight: 800 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            padding: 10px 12px !important;
+        }
+        .vip-badge-pill {
+            background: #FFD700;
+            color: #000;
+            font-size: 10px;
+            padding: 2px 7px;
+            border-radius: 12px;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+        .vip-menu-item.active {
+            background: linear-gradient(90deg, rgba(5, 150, 105, 0.45), rgba(16, 185, 129, 0.3)) !important;
+            border: 1.5px solid #34d399 !important;
+            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.4) !important;
+        }
+        .vip-menu-item.active a {
+            color: #d1fae5 !important;
+        }
+        .vip-badge-pill.active {
+            background: linear-gradient(135deg, #10b981, #059669) !important;
+            color: #ffffff !important;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.5);
+        }
+
+        /* VIP Home Banner */
+        .vip-home-banner {
+            margin: 12px 14px 18px 14px;
+            cursor: pointer;
+        }
+        .vip-home-banner-inner {
+            background: linear-gradient(135deg, #1d0830 0%, #300c50 50%, #170528 100%);
+            border: 1.5px solid #b845ff;
+            border-radius: 14px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            box-shadow: 0 6px 20px rgba(138, 14, 223, 0.35);
+            transition: all 0.2s ease;
+        }
+        .vip-home-banner-inner:hover {
+            border-color: #e084ff;
+            transform: translateY(-2px);
+        }
+        .vip-home-banner-inner.active-vip {
+            background: linear-gradient(135deg, #062b1e 0%, #0d4a34 50%, #041c13 100%);
+            border-color: #10b981;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+        }
+        .vip-home-banner-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .vip-home-banner-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(255, 215, 0, 0.15);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: #FFD700;
+            flex-shrink: 0;
+        }
+        .vip-home-banner-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .vip-pill {
+            background: #FFD700;
+            color: #000;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 7px;
+            border-radius: 10px;
+        }
+        .vip-home-banner-desc {
+            font-size: 11px;
+            color: #d8b4fe;
+            margin-top: 3px;
+            line-height: 1.4;
+        }
+        .vip-home-banner-btn {
+            background: linear-gradient(135deg, #8A0EDF, #c54bff);
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        /* Subscription Full Section */
+        .sub-wrapper {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 16px 14px 80px 14px;
+        }
+        .sub-hero-card {
+            background: linear-gradient(135deg, #1b072e 0%, #2b0c47 50%, #150524 100%);
+            border: 1.5px solid #a832fc;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 8px 24px rgba(138, 14, 223, 0.35);
+            margin-bottom: 20px;
+        }
+        .sub-hero-icon {
+            font-size: 38px;
+            color: #FFD700;
+            margin-bottom: 8px;
+        }
+        .sub-hero-title {
+            font-size: 20px;
+            font-weight: 900;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+        }
+        .sub-hero-subtitle {
+            font-size: 13px;
+            color: #d8b4fe;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .sub-wallet-card {
+            background: #1e1e2f;
+            border: 1px solid #3d3d5c;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+        .sub-wallet-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .sub-wallet-balance-num {
+            font-size: 26px;
+            font-weight: 900;
+            color: #00d2ff;
+        }
+        .sub-plans-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 14px;
+            margin-bottom: 24px;
+        }
+        .sub-plan-card {
+            background: #1e1e2f;
+            border: 1.5px solid #3d3d5c;
+            border-radius: 14px;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .sub-plan-card:hover {
+            border-color: #c54bff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(138, 14, 223, 0.25);
+        }
+        .sub-plan-card.featured {
+            border-color: #c54bff;
+            background: linear-gradient(180deg, rgba(138, 14, 223, 0.15) 0%, #1e1e2f 100%);
+        }
+        .sub-plan-badge {
+            position: absolute;
+            top: -10px;
+            background: #c54bff;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 10px;
+            letter-spacing: 0.5px;
+        }
+        .sub-plan-days {
+            font-size: 13px;
+            color: #8b949e;
+            font-weight: 700;
+            margin-top: 4px;
+        }
+        .sub-plan-price {
+            font-size: 24px;
+            font-weight: 900;
+            color: #ffffff;
+            margin: 6px 0;
+        }
+        .sub-plan-btn {
+            background: linear-gradient(135deg, #8A0EDF, #c54bff);
+            color: #fff;
+            border: none;
+            width: 100%;
+            padding: 8px 0;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 800;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s ease;
+        }
+        .sub-plan-btn:hover {
+            filter: brightness(1.15);
+        }
+        .sub-plan-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .sub-input-box {
+            width: 100%;
+            background: #141420;
+            border: 1px solid #3d3d5c;
+            color: #ffffff;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .sub-input-box:focus {
+            border-color: #c54bff;
+            box-shadow: 0 0 0 2px rgba(197, 75, 255, 0.2);
+        }
+        .sub-select-box {
+            width: 100%;
+            background: #141420;
+            border: 1px solid #3d3d5c;
+            color: #ffffff;
+            padding: 10px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            margin-bottom: 10px;
+            outline: none;
+            box-sizing: border-box;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23c54bff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            background-size: 16px;
+            padding-right: 36px;
+        }
+        .sub-select-box:focus {
+            border-color: #c54bff;
+            box-shadow: 0 0 0 2px rgba(197, 75, 255, 0.2);
+        }
+        .sub-select-box option {
+            background: #1a1a2b;
+            color: #ffffff;
+            padding: 8px;
+        }
+
+        /* Custom Not-Registered Modal */
+        .custom-sub-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 100000;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+            box-sizing: border-box;
+            animation: fadeInSubModal 0.2s ease;
+        }
+        @keyframes fadeInSubModal {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .custom-sub-modal-card {
+            background: #1a1a2b;
+            border: 1.5px solid #8A0EDF;
+            border-radius: 18px;
+            padding: 24px 20px;
+            max-width: 380px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.75), 0 0 30px rgba(138, 14, 223, 0.35);
+            box-sizing: border-box;
+        }
+        .custom-sub-modal-close {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            background: none;
+            border: none;
+            color: #9ca3af;
+            font-size: 26px;
+            cursor: pointer;
+            line-height: 1;
+            padding: 4px 8px;
+            border-radius: 6px;
+        }
+        .custom-sub-modal-close:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .custom-sub-modal-icon {
+            width: 58px;
+            height: 58px;
+            background: rgba(138, 14, 223, 0.2);
+            border: 1.5px solid #c54bff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 14px auto;
+            font-size: 26px;
+            color: #FFD700;
+        }
+        .custom-sub-modal-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 3px;
+        }
+        .custom-sub-modal-subtitle {
+            font-size: 13px;
+            font-weight: 700;
+            color: #c54bff;
+            margin-bottom: 12px;
+        }
+        .custom-sub-modal-body {
+            font-size: 13px;
+            color: #d1d5db;
+            line-height: 1.55;
+            margin-bottom: 20px;
+        }
+        .custom-sub-modal-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .custom-sub-modal-register-btn {
+            background: linear-gradient(135deg, #8A0EDF, #c54bff);
+            color: #ffffff;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(138, 14, 223, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+        .custom-sub-modal-register-btn:hover {
+            filter: brightness(1.15);
+            transform: translateY(-1px);
+        }
+        .custom-sub-modal-cancel-btn {
+            background: #25283b;
+            color: #9ca3af;
+            border: 1px solid #3d3d5c;
+            padding: 10px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .custom-sub-modal-cancel-btn:hover {
+            color: #ffffff;
+            border-color: #555577;
+        }
     </style>
 </head>
 <body>
@@ -1502,9 +1972,15 @@
 
     <div class="dropdown-menu-container" id="dropdownMenu">
         <div class="dropdown-header">
-            <h2>VDOSky.in</h2>
+            <h2>VDOSKy.in</h2>
         </div>
         <ul class="dropdown-menu-list">
+            <li class="vip-menu-item" id="vipMenuItem">
+                <a href="#" onclick="window.openSubscriptionSection(); return false;" id="vipMenuLink">
+                    <span id="vipMenuText"><i class="fa-solid fa-crown" style="color: #FFD700; margin-right: 8px;"></i> VIP Subscription (No Ads)</span>
+                    <span class="vip-badge-pill" id="vipMenuBadge">VIP</span>
+                </a>
+            </li>
             <li><a href="#" onclick="goHome(); return false;"><i class="fa-solid fa-house"></i> Home</a></li>
             <li><a href="#" onclick="window.refreshMoviesFromGitHub(); return false;" style="color: #00d2ff;"><i class="fa-solid fa-arrows-rotate"></i> Sync Live Catalog</a></li>
             <li><a href="#" onclick="openCloudStreamSection(); return false;" style="color: #00d2ff;"><i class="fa-solid fa-play"></i> Watch Stream</a></li>

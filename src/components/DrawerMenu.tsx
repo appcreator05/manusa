@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, Film, Sparkles, Compass, Clock, Award, Shield, Check, Maximize, Minimize, Smartphone, Music, RefreshCw } from 'lucide-react';
+import { X, Film, Sparkles, Compass, Clock, Award, Shield, Check, Maximize, Minimize, Smartphone, Music, RefreshCw, Crown } from 'lucide-react';
 import { VDOSKyLogo } from './VDOSKyLogo';
 import { toggleSystemNavigation } from '../utils/systemBars';
 import { CURRENT_APP_VERSION } from '../services/updateService';
@@ -11,6 +11,8 @@ interface DrawerMenuProps {
   onSelectCategory: (category: string) => void;
   onOpenAdConfig?: () => void;
   onOpenMusicSection: () => void;
+  onOpenSubscriptionSection?: () => void;
+  isSubscribed?: boolean;
   onOpenSplashScreen?: () => void;
   onCheckForUpdate?: () => void;
   isCheckingUpdate?: boolean;
@@ -25,6 +27,8 @@ export const DrawerMenu: React.FC<DrawerMenuProps> = ({
   selectedCategory,
   onSelectCategory,
   onOpenMusicSection,
+  onOpenSubscriptionSection,
+  isSubscribed,
   onOpenSplashScreen,
   onCheckForUpdate,
   isCheckingUpdate = false,
@@ -107,6 +111,50 @@ export const DrawerMenu: React.FC<DrawerMenuProps> = ({
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {/* Dedicated VIP / Ad-Free Subscription Navigation Button (Top Priority) */}
+          {onOpenSubscriptionSection && (
+            <div className="mx-3 mb-2.5">
+              <button
+                id="btn-drawer-open-subscription"
+                onClick={() => {
+                  onClose();
+                  onOpenSubscriptionSection();
+                }}
+                className={`w-full flex items-center justify-between p-3.5 rounded-2xl font-black text-xs transition-all cursor-pointer border-2 active:scale-[0.98] ${
+                  isSubscribed
+                    ? 'bg-gradient-to-r from-emerald-700 via-teal-800 to-emerald-900 text-white border-emerald-400/80 shadow-lg shadow-emerald-950/60'
+                    : 'bg-gradient-to-r from-[#8A0EDF] via-[#9e1beb] to-[#c54bff] text-white border-purple-300 shadow-xl shadow-purple-950/70 hover:brightness-110'
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-black/40 border border-white/20 flex items-center justify-center shrink-0">
+                    <Crown className="w-5 h-5 text-[#FFD700] fill-current animate-bounce" />
+                  </div>
+                  <div className="text-left">
+                    <div className="text-sm font-black leading-tight flex items-center gap-1.5 text-white">
+                      <span>VIP Subscription</span>
+                      {isSubscribed ? (
+                        <span className="text-[9px] bg-emerald-500/40 text-emerald-100 px-2 py-0.5 rounded-full font-mono font-bold">
+                          ACTIVE
+                        </span>
+                      ) : (
+                        <span className="text-[9px] bg-amber-400 text-black px-1.5 py-0.5 rounded-full font-extrabold uppercase">
+                          NEW
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11px] text-purple-100/90 font-semibold mt-0.5">
+                      {isSubscribed ? 'Ad-Free Mode Active 🛡️' : 'Wallet Recharge & 100% No Ads'}
+                    </div>
+                  </div>
+                </div>
+                <span className="bg-black/40 text-[11px] font-black px-2.5 py-1 rounded-xl border border-white/30 text-amber-300">
+                  {isSubscribed ? 'Active ⭐' : 'Open 👑'}
+                </span>
+              </button>
+            </div>
+          )}
 
           {/* App Fullscreen Mode (Hides mobile top status bar and bottom navigation bar) */}
           <div className="mx-3 mb-2 p-2.5 rounded-xl bg-gray-900/80 border border-gray-800 flex items-center justify-between">
