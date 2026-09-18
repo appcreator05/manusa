@@ -146,7 +146,7 @@ window.openInChrome = function(url) {
 };
 
 // ==========================================
-// KEEP SCREEN ALWAYS ON (WAKE LOCK)
+// KEEP SCREEN ALWAYS ON & TRUE FULLSCREEN (WAKE LOCK + STATUS BAR HIDE)
 // ==========================================
 let appWakeLockSentinel = null;
 
@@ -163,7 +163,30 @@ async function requestContinuousWakeLock() {
         } catch (e) {}
     }
 
-    // 2. Web Screen Wake Lock API
+    // 2. Hide Capacitor Status Bar & Navigation Bar dynamically on app load/visibility
+    try {
+        const { StatusBar } = await import('@capacitor/status-bar');
+        if (StatusBar) {
+            await StatusBar.hide().catch(() => {});
+            await StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+        }
+    } catch (e) {}
+
+    try {
+        const { NavigationBar } = await import('@capawesome/capacitor-navigation-bar');
+        if (NavigationBar) {
+            await NavigationBar.hide().catch(() => {});
+        }
+    } catch (e) {}
+
+    try {
+        const { Fullscreen } = await import('@boengli/capacitor-fullscreen');
+        if (Fullscreen) {
+            await Fullscreen.activateImmersiveMode().catch(() => {});
+        }
+    } catch (e) {}
+
+    // 3. Web Screen Wake Lock API
     if (typeof navigator !== 'undefined' && 'wakeLock' in navigator && typeof navigator.wakeLock.request === 'function') {
         try {
             if (!appWakeLockSentinel || appWakeLockSentinel.released) {

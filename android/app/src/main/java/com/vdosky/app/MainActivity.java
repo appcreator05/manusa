@@ -113,6 +113,10 @@ public class MainActivity extends BridgeActivity {
                     window.setAttributes(lp);
                 }
 
+                // Explicitly add FLAG_FULLSCREEN and FLAG_LAYOUT_NO_LIMITS for uncompromising edge-to-edge
+                window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+                window.addFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+
                 // WindowCompat setup for modern Android (Android 11 / API 30+)
                 WindowCompat.setDecorFitsSystemWindows(window, false);
                 WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(window, window.getDecorView());
@@ -124,6 +128,7 @@ public class MainActivity extends BridgeActivity {
                 // Sticky immersive flags
                 View decorView = window.getDecorView();
                 if (decorView != null) {
+                    decorView.setFitsSystemWindows(false);
                     decorView.setSystemUiVisibility(
                         View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
                         | View.SYSTEM_UI_FLAG_FULLSCREEN
@@ -146,6 +151,11 @@ public class MainActivity extends BridgeActivity {
                             );
                         }
                     });
+                }
+
+                // Ensure the underlying Capacitor WebView fitsSystemWindows is set to false
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    getBridge().getWebView().setFitsSystemWindows(false);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
